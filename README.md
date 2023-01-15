@@ -11,7 +11,26 @@
 
 ## Software
 
-TBD
+```
+$ cd romconv
+$ ./audioconv.py > ../galagino/wavetables.h
+$ ./cmapconv.py > ../galagino/colormaps.h
+$ ./romconv.py > ../galagino/rom.h
+$ ./spriteconv.py > ../galagino/spritemap.h
+$ ./tileconv.py > ../galagino/tilemap.h
+$ ./tileaddr.py > ../galagino/tileaddr.h
+$ ./starsets.py > ../galagino/starseed.h
+$ ./z80patch.py 
+Copying CodesCB.h
+Copying Codes.h
+Copying CodesXX.h
+Copying CodesED.h
+Copying CodesXCB.h
+Copying Tables.h
+Patching Z80.h
+Patching Z80.c
+$
+```
 
 ## Hardware
 
