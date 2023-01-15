@@ -15,5 +15,7 @@ TBD
 ## Hardware
 
 ![Breadboard scheme](images/galagino_bb.png)
+Download as [Fritzing](images/galagino_bb.fzz) or [PDF](images/galagino_bb.pdf)
 
-[Galagino fritzing](images/galagino_bb.fzz)
+
+![Breadboard photo](images/galagino_breadboard.jpeg)
