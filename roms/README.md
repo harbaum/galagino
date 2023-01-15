@@ -1,9 +1,11 @@
 # roms
 
-This directory contains ROM files and other data required to
-build galagino. 
+This directory contains ROM files and other data required to build
+galagino. The *Galaga Namco Rev. B* romset contains the orignal rom
+files from the galaga arcade. These files are also needed for
+emulators like MAME and can easily be found online.
 
-From the Namco Rev. B romset:
+Files needed from the Namco Rev. B romset:
 
 * gg1_1b.3p, gg1_2b.3m, gg1_3.2m and gg1_4b.2l - CPU1 rom
 * gg1_5b.3f - CPU2 rom
@@ -18,4 +20,4 @@ From the Namco Rev. B romset:
 Other files required:
 
 * boom_12k_s8.raw - explosion sound
-* [Z80-081707.zip](http://fms.komkon.org/EMUL8/Z80-081707.zip) - Z80 CPU emulator
+* [Z80-081707.zip](https://fms.komkon.org/EMUL8/Z80-081707.zip) - Z80 CPU emulator
