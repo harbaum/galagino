@@ -1,4 +1,5 @@
-# Galagino - galaga arcade emulator for ESP32
+# Galagino
+## galaga arcade emulator for ESP32
 
 ![Galagino screencast](images/galagino.gif)
 
@@ -16,7 +17,7 @@ TBD
 
 The hardware is built around one of those cheap ESP32 development
 boards like the ESP32 Devkit V4 depicted in the images below. The
-total components needed are:
+components needed are:
 
 * ESP32 development board (e.g. Devkit V4)
 * A 320x240 SPI TFT screen (no touch needed)
@@ -28,11 +29,11 @@ total components needed are:
 * five push buttons
 * breadboard and wires
 
-The entire setup should finally be connected as depiced below. The
+The entire setup should be connected as depiced below. The
 Devkit is too wide for the breadboard leaving no space above it to
-connect wires. Thus the wires going to to the top pin row of the
+connect wires. Thus the wires going to the top pin row of the
 Devkit are placed underneath the DevKit with the connections done
-as shown the image below.
+as shown in the image below.
 
 ![Breadboard scheme](images/galagino_bb.png)
 
