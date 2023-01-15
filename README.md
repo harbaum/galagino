@@ -4,10 +4,13 @@
 
 ## Youtube videos
 
-[First test](https://www.youtube.com/shorts/LZRI6izM8XM)
-[Sound and Starfield working](https://www.youtube.com/shorts/8uNSv0aRtgY)
+* [First test](https://www.youtube.com/shorts/LZRI6izM8XM)
+* [Sound and Starfield working](https://www.youtube.com/shorts/8uNSv0aRtgY)
+* [Finally playable](https://www.youtube.com/shorts/wqnJzOAAths)
 
 ## Software
+
+TBD
 
 ## Hardware
 
