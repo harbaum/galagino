@@ -66,8 +66,8 @@ Download as [Fritzing](images/galagino_bb.fzz) or [PDF](images/galagino_bb.pdf)
 
 The software consists of three parts:
 
-* The Galagino specific code contained in this repository
-* The original Galaga Namco Rev. B ROM files
+* The [Galagino specific code](galagino/) contained in this repository
+* The [original Galaga Namco Rev. B ROM files](https://www.bing.com/search?q=galaga+namco+b+rom)
 * A [Z80 software emulation](https://fms.komkon.org/EMUL8/Z80-081707.zip)
 
 The ROM files have to be placed in the [roms directory](roms/), together with
