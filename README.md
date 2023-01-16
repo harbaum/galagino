@@ -40,7 +40,7 @@ The hardware is built around one of those cheap ESP32 development
 boards like the ESP32 Devkit V4 depicted in the images below. The
 components needed are:
 
-* ESP32 development board (e.g. Devkit V4)
+* ESP32 development board (e.g. [Devkit V4](https://www.espressif.com/en/products/devkits/esp32-devkitc))
 * A 320x240 SPI TFT screen (no touch needed)
   * Either a ILI9341 based screen as depicted, or
   * a ST7789 based screen with 320x240 pixels
@@ -109,7 +109,8 @@ Z80.c
 ```
 
 With all these files in place, the galagino.ino sketch can be loaded
-into the Arduino IDE. The Arduino IDE must have the ESP32 board support
+into the [Arduino IDE](https://docs.arduino.cc/software/ide-v2). The
+Arduino IDE must have the [ESP32 board support](https://github.com/espressif/arduino-esp32)
 installed and selected and the appropriate board like e.g. the
 *ESP32 Dev Module* should be selected. Finally the default core used
 by Arduino should be 1 (this is the default) as Galagino will use core 0
