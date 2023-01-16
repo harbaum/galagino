@@ -3,7 +3,7 @@
 
 ![Galagino screencast](images/galagino.gif)
 
-Galaga is one of the most iconic arcade machines of all times. It has
+[Galaga](https://de.wikipedia.org/wiki/Galaga) is one of the most iconic arcade machines of all times. It has
 been remade and emulated many times. So far the cheapest and smallest
 system able to do a faithful emulation of the original arcade machine
 was the raspberry pi. But even the much cheaper ESP32 should be able
@@ -44,9 +44,9 @@ components needed are:
 * A 320x240 SPI TFT screen (no touch needed)
   * Either a ILI9341 based screen as depicted, or
   * a ST7789 based screen with 320x240 pixels
-* An audio amplifier
-  * e.g. a PAM8302 and a 3W speaker (as seen in the photos), or
-  * a Keyestudio SC8002B, or similar
+* An audio amplifier and speaker
+  * e.g. a [PAM8302A](https://www.adafruit.com/product/2130) and a 3W speaker (as seen in the photos), or
+  * a [Keyestudio SC8002](Bhttps://www.keyestudio.com/products/keyestudio-sc8002b-audio-power-amplifier-speaker-module-for-arduino-player), or similar
 * five push buttons
 * breadboard and wires
 
