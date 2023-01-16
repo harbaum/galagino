@@ -98,7 +98,7 @@ Patching Z80.c
 $
 ```
 
-Afterwards the galagino directory should contains the following files:
+Afterwards the [galagino directory](galagino) should contain the following files:
 
 ```
 CodesCB.h    Codes.h      CodesXX.h    config.h     emulation.h
