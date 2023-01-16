@@ -46,7 +46,7 @@ components needed are:
   * a ST7789 based screen with 320x240 pixels
 * An audio amplifier and speaker
   * e.g. a [PAM8302A](https://www.adafruit.com/product/2130) and a 3W speaker (as seen in the photos), or
-  * a [Keyestudio SC8002](Bhttps://www.keyestudio.com/products/keyestudio-sc8002b-audio-power-amplifier-speaker-module-for-arduino-player), or similar
+  * a [Keyestudio SC8002B](https://www.keyestudio.com/products/keyestudio-sc8002b-audio-power-amplifier-speaker-module-for-arduino-player), or similar
 * five push buttons
 * breadboard and wires
 
