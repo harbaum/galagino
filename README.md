@@ -12,27 +12,28 @@ to easily emulate a machine from the early 80's, shouldn't it?
 Well, things are not that easy. The galaga arcade was driven by three
 Z80 CPUs, each running at 3Mhz. Additionally the arcade machine
 included two more CPUs for button and coin handling and for audio
-support. And finally the video hardware itself had dedicated support
+support. And finally the hardware itself had dedicated support
 for simple wavetable audio, tilemap graphics and up to 64 sprites.
 The video resultion was 224 by 288 pixels. The ESP32 on the other hand
-comes with two cores running at 240MHz each but no dedicated video
-hardware at all. Emulating the various CPUs as well as the handling of
+comes with two cores running at 240MHz. But it lacks dedicated video
+hardware. Emulating the various CPUs as well as the handling of
 audio and graphics turned out to be challenging for the ESP32.
 
 Cheap TFT screens with a resolution of 320 by 240 pixels are avaialable
 in various sizes from 2.0 inch to 3.2 inch allowing for a very small
 and cheap *galagino* setup.
 
-These small displays usually allow for a SPI clock rates of up to
-40MHz allowing for a max screen refresh rate of ~30Hz which is exactly
-half the refresh rate of the original arcade machine. 30Hz allows for
-a very fluid gameplay.
+These small displays usually allow for SPI clock rates of up to 40MHz
+allowing for a max screen refresh rate of ~30Hz. This is exactly half
+the refresh rate of the original arcade machine. 30Hz is sufficient
+for a very fluid gameplay.
 
 ## Youtube videos
 
 * [First test](https://www.youtube.com/shorts/LZRI6izM8XM)
 * [Sound and Starfield working](https://www.youtube.com/shorts/8uNSv0aRtgY)
 * [Finally playable](https://www.youtube.com/shorts/wqnJzOAAths)
+* [Pac-Man on Galagino](https://www.youtube.com/shorts/F4-XiiPwG1c)
 
 ## Hardware
 
