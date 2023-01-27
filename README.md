@@ -7,7 +7,7 @@
 been remade and emulated many times. So far the cheapest and smallest
 system able to do a faithful emulation of the original arcade machine
 was the raspberry pi. But even the much cheaper ESP32 should be able
-to easily emulate a machine from the early 80's, shouldn't it?
+to easily emulate a machine from the early ’80s, shouldn't it?
 
 Well, things are not that easy. The galaga arcade was driven by three
 Z80 CPUs, each running at 3Mhz. Additionally the arcade machine
