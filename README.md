@@ -34,6 +34,7 @@ for a very fluid gameplay.
 * [Sound and Starfield working](https://www.youtube.com/shorts/8uNSv0aRtgY)
 * [Finally playable](https://www.youtube.com/shorts/wqnJzOAAths)
 * [Pac-Man on Galagino](https://www.youtube.com/shorts/F4-XiiPwG1c)
+* [Donkey Kong on Galagino](https://www.youtube.com/shorts/KROFJ0Rtj0w)
 
 ## Hardware
 
