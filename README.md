@@ -3,11 +3,12 @@
 
 ![Galagino screencast](images/galagino.gif)
 
-[Galaga](https://de.wikipedia.org/wiki/Galaga) is one of the most iconic arcade machines of all times. It has
-been remade and emulated many times. So far the cheapest and smallest
-system able to do a faithful emulation of the original arcade machine
-was the raspberry pi. But even the much cheaper ESP32 should be able
-to easily emulate a machine from the early ’80s, shouldn't it?
+[Galaga](https://de.wikipedia.org/wiki/Galaga) is one of the most
+iconic arcade machines of all times. It has been remade and emulated
+many times. So far the cheapest and smallest system able to do a
+faithful emulation of the original arcade machine was the raspberry
+pi. But even the much cheaper ESP32 should be able to easily emulate a
+machine from the early ’80s, shouldn't it?
 
 Well, things are not that easy. The galaga arcade was driven by three
 Z80 CPUs, each running at 3Mhz. Additionally the arcade machine
@@ -48,8 +49,9 @@ components needed are:
   * a ST7789 based screen with 320x240 pixels
 * An audio amplifier and speaker
   * e.g. a [PAM8302A](https://www.adafruit.com/product/2130) and a 3W speaker (as seen in the photos), or
-  * a [Keyestudio SC8002B](https://www.keyestudio.com/products/keyestudio-sc8002b-audio-power-amplifier-speaker-module-for-arduino-player), or similar
-* five push buttons
+  * a [Keyestudio SC8002B](https://www.keyestudio.com/products/keyestudio-sc8002b-audio-power-amplifier-speaker-module-for-arduino-player), or similar 
+* five push buttons, or
+* one push button and a five way joystick breakout (for Pac-Man and Donkey Kong)
 * breadboard and wires
 
 The entire setup should be connected as depiced below. The Devkit is
@@ -60,7 +62,16 @@ image below.
 
 ![Breadboard scheme](images/galagino_bb.png)
 
-Download as [Fritzing](images/galagino_bb.fzz) or [PDF](images/galagino_bb.pdf)
+[PDF](images/galagino_bb.pdf)
+
+This setup with five buttons works fine for Galaga since there is no
+vertical movement in the game that requires a joystick. A joystick may
+be needed for other games like Pac-Man and Donkey Kong. The setup would
+the be wired in the following way:
+
+![Breadboard scheme with 5 way joystick](images/galagino_5way_bb.png)
+
+[PDF](images/galagino_5way_bb.pdf)
 
 ![Breadboard photo](images/galagino_breadboard.jpeg)
 
