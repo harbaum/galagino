@@ -1,9 +1,32 @@
-# roms
+# ROMs
 
 This directory contains ROM files and other data required to build
 galagino. The *Galaga Namco Rev. B* romset contains the orignal rom
 files from the galaga arcade. These files are also needed for
-emulators like MAME and can easily be found online.
+emulators like MAME and can easily be found online. If Pac-Man
+and/or Donkey Kong are to be included as well, then their ROM files
+are also needed.
+
+Once all files have been placed here, the conversion scripts
+in the (romconv directory)[../romconv] can be used to convert
+the ROMs into source files to be compiled for the ESP32.
+
+## Generic files required:
+
+* [Z80-081707.zip](https://fms.komkon.org/EMUL8/Z80-081707.zip) - Z80 CPU emulator
+
+## PacMan
+
+Files needed from the Pacman Midway US romset:
+
+* pacman.6e, pacman.6f, pacman.6h, pacman.6j - CPU rom
+* pacman.5e - tile graphics
+* pacman.5f - sprite graphics
+* 82s126.1m, 82s126.3m - audio wavetables
+* 82s123.7f - color palette
+* 82s126.4a - colormap
+
+## Galaga
 
 Files needed from the Namco Rev. B romset:
 
@@ -17,7 +40,12 @@ Files needed from the Namco Rev. B romset:
 * prom-4.2n - tile colormap
 * prom-5.5n - color palette
 
-Other files required:
+## Donkey Kong
 
-* boom_12k_s8.raw - explosion sound
-* [Z80-081707.zip](https://fms.komkon.org/EMUL8/Z80-081707.zip) - Z80 CPU emulator
+Files needed from the Donkey Kong romset:
+
+* c_5et_g.bin, c_5ct_g.bin, c_5bt_g.bin, c_5at_g.bin - CPU rom
+* v_5h_b.bin, v_3pt.bin - tile graphics
+* l_4m_b.bin, l_4n_b.bin, l_4r_b.bin, l_4s_b.bin - sprite graphics
+* c-2j.bpr, v-5e.bpr - colormap
+* c-2k.bpr - color palette

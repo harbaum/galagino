@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 
 STAR_SETS = [ [
   # star set 0 
@@ -74,23 +75,30 @@ STAR_SETS = [ [
   [0xA8,0xF3,0x0C], [0xDE,0xF9,0x1D], [0x2C,0xFA,0x13]
 ] ]
 
-def dump_starset():
-    print("const struct star star_set[][63] = {" )
+def dump_starset(name):
+    with open(name, "w") as f:
+        print("struct galaga_star { unsigned char x, y; unsigned short col; };", file=f)
+        print("const struct galaga_star galaga_star_set[][63] = {", file=f)
 
-    sets_str = []
-    for s in STAR_SETS:
-        set_str = []
-        for e in s:
-            # map 6 bit rgb to 16 bit rgb
-            r = 31*((e[2]>>0) & 0x3)//3
-            g = 63*((e[2]>>2) & 0x3)//3
-            b = 31*((e[2]>>4) & 0x3)//3
-            rgb = (r << 11) + (g << 5) + b
-            rgbs = ((rgb & 0xff00) >> 8) + ((rgb & 0xff) << 8)
-            set_str.append(f"  {{ 0x{e[0]:02x}, 0x{e[1]:02x}, 0x{rgbs:04x} }}") 
-        sets_str.append(" {\n"+",\n".join(set_str)+"\n }")
+        sets_str = []
+        for s in STAR_SETS:
+            set_str = []
+            for e in s:
+                # map 6 bit rgb to 16 bit rgb
+                r = 31*((e[2]>>0) & 0x3)//3
+                g = 63*((e[2]>>2) & 0x3)//3
+                b = 31*((e[2]>>4) & 0x3)//3
+                rgb = (r << 11) + (g << 5) + b
+                rgbs = ((rgb & 0xff00) >> 8) + ((rgb & 0xff) << 8)
+                set_str.append(f"  {{ 0x{e[0]:02x}, 0x{e[1]:02x}, 0x{rgbs:04x} }}") 
+            sets_str.append(" {\n"+",\n".join(set_str)+"\n }")
         
-    print(",\n".join(sets_str))
-    print("};")
-    
-dump_starset()    
+        print(",\n".join(sets_str), file=f)
+        print("};", file=f)
+
+if len(sys.argv) != 2:
+    print("Usage:",sys.argv[0], "<outfile>")
+    print("  ", sys.argv[0], "../galagino/galaga_starseed.h")
+    sys.exit(-1)
+
+dump_starset(sys.argv[1])    

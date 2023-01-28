@@ -1,62 +1,54 @@
 #!/usr/bin/env python3
+import sys
 
-ROMLOC="../roms/"
-WAVETABLE = "prom-1.1d"
-BOOMSOUND = "boom_12k_s8.raw"
-
-def parse_rom(name):
-    f = open(name, "rb")
-    wave_data = f.read()
-    f.close()
-
-    if len(wave_data) != 256:
-        raise ValueError("Missing rom data")
-
-    print("const signed char wavetables[][32] = {")
+def parse_wavetable(name, infiles, outfile):
+    of = open(outfile, "w")
+    print("const signed char "+name+"[][32] = {", file=of)
     
-    # 8 waveforms
-    for w in range(8):
-        print("// wave #{:d}".format(w))
-        # draw waveform        
-        for y in range(8):
-            print("//", end="")
-            for s in range(32):                
-                if wave_data[32*w+s] == 15-2*y:
-                    print("---", end="")
-                elif wave_data[32*w+s] == 15-(2*y+1):
-                    print("___", end="")
-                else:
-                    print("   ",end="")                    
-            print("")            
+    for infile in infiles:
+        f = open(infile, "rb")
+        wave_data = f.read()
+        f.close()
 
-        print(" {", end="");        
-        # with 32 values each
-        for s in range(32):
-            print("{:2d}".format(wave_data[32*w+s]-7), end="")
-            if s!= 31:    print(",", end="")
-            elif w != 7:  print("},");
-            else:         print("}");
+        if len(wave_data) != 256:
+            raise ValueError("Missing rom data")
+
+        # 8 waveforms per rom
+        for w in range(8):
+            print("// "+infile.split("/")[-1]+" wave #{:d}".format(w), file=of)
+            # draw waveform        
+            for y in range(8):
+                print("//", end="", file=of)
+                for s in range(32):                
+                    if wave_data[32*w+s] == 15-2*y:
+                        print("---", end="", file=of)
+                    elif wave_data[32*w+s] == 15-(2*y+1):
+                        print("___", end="", file=of)
+                    else:
+                        print("   ",end="", file=of)                    
+                print("", file=of)            
+
+            print(" {", end="", file=of);        
+            # with 32 values each
+            for s in range(32):
+                print("{:2d}".format(wave_data[32*w+s]-7), end="", file=of)
+                if s!= 31:    print(",", end="", file=of)
+                elif w != 7 or infile != infiles[-1]:  print("},", file=of);
+                else:         print("}", file=of);
             
-            # print(",", end="")
-        print("")            
+            print("", file=of)            
             
-    print("};")
+    print("};", file=of)
 
-def parse_boom(name):
-    f = open(name, "rb")
-    boom_data = f.read()
-    f.close()
+    of.close()
+        
+if len(sys.argv) < 4:
+    print("Usage:",sys.argv[0], "name <infiles> <outfile>")
+    print("  for Galaga wavetable: ", sys.argv[0], "galaga_wavetable ../roms/prom-1.1d ../galagino/galaga_wavetable.h")
+    print("  for Pacman wavetable: ", sys.argv[0], "pacman_wavetable ../roms/82s126.1m ../roms/82s126.3m ../galagino/pacman_wavetable.h")
+    exit(-1)
 
-    print("// boom sound, 12khz signed 8 bits pcm")
-    print("const signed char boom[] = {")
-    
-    for w in range(len(boom_data)):
-        b = boom_data[w] if boom_data[w] < 128 else boom_data[w]-256
-        print("{:d},".format(b), end="")
-        if (w % 32) == 31: print("")
-    print("};")
+parse_wavetable(sys.argv[1], sys.argv[2:-1], sys.argv[-1])
 
-parse_rom(ROMLOC + WAVETABLE)
-print("")
-parse_boom(ROMLOC + BOOMSOUND)
+
     

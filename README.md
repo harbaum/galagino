@@ -1,14 +1,24 @@
 # Galagino
-## Galaga arcade emulator for ESP32
 
-![Galagino screencast](images/galagino.gif)
+Galaga, Pac-Man and Donkey Kong for the ESP32
+
+## Arcade emulator for ESP32
+
+![menu screenshot](images/menu.png)
+![Galaga screencast](images/galagino.gif)
+![Pac-Man screenshot](images/pacman.png)
+![Donkey Kong screenshot](images/dkong.png)
 
 [Galaga](https://de.wikipedia.org/wiki/Galaga) is one of the most
-iconic arcade machines of all times. It has been remade and emulated
-many times. So far the cheapest and smallest system able to do a
-faithful emulation of the original arcade machine was the raspberry
-pi. But even the much cheaper ESP32 should be able to easily emulate a
-machine from the early ’80s, shouldn't it?
+iconic arcade machines of all times and is listed on place #2 on
+the [Killer List of Video Games](http://www.klov.net), right after
+Pac-Man and before Donkey Kong.
+
+Galaga has been remade and emulated many times. So far the cheapest
+and smallest system able to do a faithful emulation of the original
+arcade machine was the raspberry pi. But even the much cheaper ESP32
+should be able to easily emulate a machine from the early ’80s,
+shouldn't it?
 
 Well, things are not that easy. The galaga arcade was driven by three
 Z80 CPUs, each running at 3Mhz. Additionally the arcade machine
@@ -28,6 +38,9 @@ These small displays usually allow for SPI clock rates of up to 40MHz
 allowing for a max screen refresh rate of ~30Hz. This is exactly half
 the refresh rate of the original arcade machine. 30Hz is sufficient
 for a very fluid gameplay.
+
+Later in this project the first and third placed games on the Killer List
+of Video games were added together with a little menu at startup.
 
 ## Youtube videos
 
@@ -64,6 +77,8 @@ image below.
 
 [PDF](images/galagino_bb.pdf)
 
+![Breadboard photo](images/galagino_breadboard.jpeg)
+
 This setup with five buttons works fine for Galaga since there is no
 vertical movement in the game that requires a joystick. A joystick may
 be needed for other games like Pac-Man and Donkey Kong. The setup would
@@ -73,8 +88,6 @@ the be wired in the following way:
 
 [PDF](images/galagino_5way_bb.pdf)
 
-![Breadboard photo](images/galagino_breadboard.jpeg)
-
 ## Software
 
 The software consists of three parts:
@@ -83,43 +96,14 @@ The software consists of three parts:
 * The [original Galaga Namco Rev. B ROM files](https://www.bing.com/search?q=galaga+namco+b+rom)
 * A [Z80 software emulation](https://fms.komkon.org/EMUL8/Z80-081707.zip)
 
-The ROM files have to be placed in the [roms directory](roms/), together with
-the ZIP file containing the Z80 emulator. A set of [python scripts](romconv/)
-is then being used to convert and patch the ROM data and emulator code and
-to include the resulting code into the galagino sketch directory. These
-scripts need to be run like so (this has yet only been tested under Linux,
-feedback for Windows is welcome):
-
-```
-$ cd romconv
-$ ./audioconv.py > ../galagino/wavetables.h
-$ ./cmapconv.py > ../galagino/colormaps.h
-$ ./romconv.py > ../galagino/rom.h
-$ ./spriteconv.py > ../galagino/spritemap.h
-$ ./tileconv.py > ../galagino/tilemap.h
-$ ./tileaddr.py > ../galagino/tileaddr.h
-$ ./starsets.py > ../galagino/starseed.h
-$ ./z80patch.py 
-Copying CodesCB.h
-Copying Codes.h
-Copying CodesXX.h
-Copying CodesED.h
-Copying CodesXCB.h
-Copying Tables.h
-Patching Z80.h
-Patching Z80.c
-$
-```
-
-Afterwards the [galagino directory](galagino) should contain the following files:
-
-```
-CodesCB.h    Codes.h      CodesXX.h    config.h     emulation.h
-rom.h        starseed.h   tileaddr.h   video.cpp    wavetables.h
-Z80.h        CodesED.h    CodesXCB.h   colormaps.h  emulation.c
-galagino.ino spritemap.h  Tables.h     tilemap.h    video.h
-Z80.c
-```
+The ROM files have to be placed in the [roms directory](roms/),
+together with the ZIP file containing the Z80 emulator. A set of
+[python scripts](romconv/) is then being used to convert and patch the
+ROM data and emulator code and to include the resulting code into the
+galagino sketch directory. The [ROM conversion](./romconv) as well as
+the [audio sample conversion](./samples) create a whole bunch of
+additional files in the [galagino directory](./galagino) needed to
+build the binary file.
 
 With all these files in place, the galagino.ino sketch can be loaded
 into the [Arduino IDE](https://docs.arduino.cc/software/ide-v2). The

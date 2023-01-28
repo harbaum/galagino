@@ -1,12 +1,38 @@
+#ifndef _EMULATION_H_
+#define _EMULATION_H_
 
-#define KEYCODE_LEFT  0x01
-#define KEYCODE_RIGHT 0x02
-#define KEYCODE_UP    0x04
-#define KEYCODE_DOWN  0x08
-#define KEYCODE_FIRE  0x10
-#define KEYCODE_1     0x20
-#define KEYCODE_2     0x40
-#define KEYCODE_3     0x80
+// a total of 7 button is needed for
+// most games
+#define BUTTON_LEFT  0x01
+#define BUTTON_RIGHT 0x02
+#define BUTTON_UP    0x04
+#define BUTTON_DOWN  0x08
+#define BUTTON_FIRE  0x10
+#define BUTTON_START 0x20
+#define BUTTON_COIN  0x40
+
+#ifndef SINGLE_MACHINE
+  #define MCH_MENU         0
+  #ifdef ENABLE_PACMAN
+    #define MCH_PACMAN     1
+    #ifdef ENABLE_GALAGA
+      #define MCH_GALAGA   2
+      #ifdef ENABLE_DKONG
+        #define MCH_DKONG  3
+        #define MACHINES   3
+      #else
+        #define MACHINES   2
+      #endif
+    #else
+      #define MCH_DKONG    2
+      #define MACHINES     2
+    #endif
+  #else
+    #define MCH_GALAGA     1
+    #define MCH_DKONG      2   
+    #define MACHINES       2
+  #endif
+#endif
 
 #if defined(__cplusplus)
 extern "C"
@@ -16,12 +42,31 @@ void prepare_emulation(void);
 void emulate_frame(void);
 extern unsigned char *memory;
 extern char game_started;
+#ifdef ENABLE_GALAGA
 extern unsigned char starcontrol;
+#endif
+#if defined(ENABLE_GALAGA) || defined(ENABLE_PACMAN)
 extern unsigned char soundregs[32];
+#endif
+#ifndef SINGLE_MACHINE
+extern signed char machine;
+extern signed char menu_sel;
+#endif
+#ifdef ENABLE_DKONG
+extern unsigned char colortable_select;
+extern void audio_dkong_bitrate(void);
+#endif
 
 // external functions called by emulation
-extern void snd_trigger_explosion(void);
+#ifdef ENABLE_GALAGA
+extern void galaga_trigger_sound_explosion(void);
+#endif
+#ifdef ENABLE_DKONG
+extern void dkong_trigger_sound(char);   // 0..15 = sfx, 16.. = mus
+#endif
 extern unsigned char buttons_get(void);
 #if defined(__cplusplus)
 }
 #endif
+
+#endif // _EMULATION_H_
