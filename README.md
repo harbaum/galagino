@@ -11,7 +11,7 @@ Galaga, Pac-Man and Donkey Kong for the ESP32
 
 [Galaga](https://de.wikipedia.org/wiki/Galaga) is one of the most
 iconic arcade machines of all times and is listed on place #2 on
-the [Killer List of Video Games](http://www.klov.net), right after
+the [Killer List of Video Games](https://www.klov.net), right after
 Pac-Man and before Donkey Kong.
 
 Galaga has been remade and emulated many times. So far the cheapest
@@ -119,10 +119,10 @@ for audio and video emulation.
 ## Configuration
 
 The Galagino code can be configured through the [galagino/config.h](galagino/config.h)
-file. This is also the place where it's possible to choose between the ILI9143
+file. This is also the place where it's possible to choose between the ILI9341
 controller (default) and the ST7789.
 
-Also the pin assigmnent can be adjusted or the TFT SPI clock.
+Also the pin assignment can be adjusted as well as the TFT SPI clock.
 
 ## Improvements
 

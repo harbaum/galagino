@@ -9,14 +9,14 @@ ST7789 displays. Sprite and tile data is converted into a format
 easier to process on the ESP32.
 
 This could all be done on the ESP32 target at run time. But here it's
-done beforehand offloading these tasks from he EPS32.
+done beforehand. This offloads these tasks from the EPS32.
 
 It's possible to implement only one or two of the three arcade
-machines.  In that case the related ROM conversion can be omitted and
+machines. In that case the related ROM conversion can be omitted and
 the machine in question has to be disabled in the file
 [config.h](../galagino/config.h).
 
-The necessary ROM files need be pleced in the [roms directory](../roms)
+The necessary ROM files need be placed in the [roms directory](../roms)
 before these scripts can be run. Once these are converted you need
 also also (convert the audio samples)[../samples].
 
