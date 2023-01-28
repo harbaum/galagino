@@ -15,7 +15,7 @@ These have to be converted into C source code using the
 ../romconv/romconv.py galaga_sample_boom ./galaga_boom.s8 ../galagino/galaga_sample_boom.h
 ```
 
-The Donkey Kong spounds are not complete, yet. 
+The Donkey Kong sounds are not complete, yet. 
 ```
 ../romconv/romconv.py dkong_sample_intro ./dkong_intro.s8 ../galagino/dkong_sample_intro.h
 ../romconv/romconv.py dkong_sample_stomp ./dkong_stomp.s8 ../galagino/dkong_sample_stomp.h
