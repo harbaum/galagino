@@ -95,7 +95,7 @@ The software consists of three parts:
 * The [Galagino specific code](galagino/) contained in this repository
 * The orignal ROM files
     * [Galaga Namco Rev. B ROM](https://www.bing.com/search?q=galaga+namco+b+rom)
-    * [Pac-Man (Modway)](https://www.bing.com/search?q=pacman+midway+arcade+rom)
+    * [Pac-Man (Midway)](https://www.bing.com/search?q=pacman+midway+arcade+rom)
     * [Donkey Kong (US set 1)](https://www.bing.com/search?q=donkey+kong+arcade+rom)
 * A [Z80 software emulation](https://fms.komkon.org/EMUL8/Z80-081707.zip)
 
