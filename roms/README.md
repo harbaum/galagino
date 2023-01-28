@@ -17,7 +17,7 @@ the ROMs into source files to be compiled for the ESP32.
 
 ## PacMan
 
-Files needed from the [Pac-Man (Modway)](https://www.bing.com/search?q=pacman+midway+arcade+rom) romset:
+Files needed from the [Pac-Man (Midway)](https://www.bing.com/search?q=pacman+midway+arcade+rom) romset:
 
 * pacman.6e, pacman.6f, pacman.6h, pacman.6j - CPU rom
 * pacman.5e - tile graphics
