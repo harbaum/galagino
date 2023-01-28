@@ -17,7 +17,7 @@ the ROMs into source files to be compiled for the ESP32.
 
 ## PacMan
 
-Files needed from the Pacman Midway US romset:
+Files needed from the [Pac-Man (Modway)](https://www.bing.com/search?q=pacman+midway+arcade+rom) romset:
 
 * pacman.6e, pacman.6f, pacman.6h, pacman.6j - CPU rom
 * pacman.5e - tile graphics
@@ -28,7 +28,7 @@ Files needed from the Pacman Midway US romset:
 
 ## Galaga
 
-Files needed from the Namco Rev. B romset:
+Files needed from the [Galaga Namco Rev. B ROM](https://www.bing.com/search?q=galaga+namco+b+rom) romset:
 
 * gg1_1b.3p, gg1_2b.3m, gg1_3.2m and gg1_4b.2l - CPU1 rom
 * gg1_5b.3f - CPU2 rom
@@ -42,7 +42,7 @@ Files needed from the Namco Rev. B romset:
 
 ## Donkey Kong
 
-Files needed from the Donkey Kong romset:
+Files needed from the [Donkey Kong (US set 1)](https://www.bing.com/search?q=donkey+kong+arcade+rom) romset:
 
 * c_5et_g.bin, c_5ct_g.bin, c_5bt_g.bin, c_5at_g.bin - CPU rom
 * v_5h_b.bin, v_3pt.bin - tile graphics
