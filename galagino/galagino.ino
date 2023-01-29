@@ -306,9 +306,10 @@ void blit_sprite(short row, unsigned char s) {
   {
     spr = galaga_sprites[sprite[s].flags & 3][sprite[s].code];
     colors = galaga_colormap_sprites[sprite[s].color & 63];
+    if(colors[0] != 0) return;   // not a valid colormap entry
   }
 #endif
- 
+
   // create mask for sprites that clip left or right
   unsigned long mask = 0xffffffff;
   if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
@@ -692,37 +693,37 @@ void dkong_trigger_sound(char snd) {
   if(dkong_sample_cnt) return;
   
   if(snd == 2) {        
-    printf("SFX STOMP\n");
+    // printf("SFX STOMP\n");
     dkong_sample_cnt = sizeof(dkong_sample_stomp);
     dkong_sample_ptr = (const signed char*)dkong_sample_stomp;
   }
           
   if(snd == 3) {
-    printf("SFX SPRING/COIN\n");
+    // printf("SFX SPRING/COIN\n");
     dkong_sample_cnt = sizeof(dkong_sample_spring);
     dkong_sample_ptr = (const signed char*)dkong_sample_spring;
   }
   
   if(snd == 16+1) {        
-    printf("MUS INTRO\n");
+    // printf("MUS INTRO\n");
     dkong_sample_cnt = sizeof(dkong_sample_intro);
     dkong_sample_ptr = (const signed char*)dkong_sample_intro;
   }
 
   if(snd == 16+2) {        
-    printf("MUS HOWHIGH\n");
+    // printf("MUS HOWHIGH\n");
     dkong_sample_cnt = sizeof(dkong_sample_howhigh);
     dkong_sample_ptr = (const signed char*)dkong_sample_howhigh;
   }
 
   if(snd == 16+8) {        
-    printf("MUS BG\n");
+    // printf("MUS BG\n");
     dkong_sample_cnt = sizeof(dkong_sample_bgmus);
     dkong_sample_ptr = (const signed char*)dkong_sample_bgmus;
   }
           
   if(snd == 16+15) {       
-    printf("MUS ROAR\n");
+    // printf("MUS ROAR\n");
     dkong_sample_cnt = sizeof(dkong_sample_roar);
     dkong_sample_ptr = (const signed char*)dkong_sample_roar;
   }

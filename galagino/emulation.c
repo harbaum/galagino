@@ -443,7 +443,7 @@ unsigned char RdZ80(unsigned short Addr) {
 }
 
 void prepare_emulation(void) {
-  memory = malloc(16384); // TODO: Fixes #3, but 8192 should be sufficient
+  memory = malloc(8192);
 
   for(current_cpu=0;current_cpu<3;current_cpu++)
     ResetZ80(&cpu[current_cpu]);
