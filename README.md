@@ -113,7 +113,7 @@ for further instructions.
 
 With all these files in place, the galagino.ino sketch can be loaded
 into the [Arduino IDE](https://docs.arduino.cc/software/ide-v2). The
-Arduino IDE must have the [ESP32 board support](https://github.com/espressif/arduino-esp32)
+Arduino IDE must have the [ESP32 board support](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
 installed and the appropriate board like e.g. the
 *ESP32 Dev Module* should be selected. Finally the default core used
 by Arduino should be 1 (this is the default) as Galagino will use core 0
