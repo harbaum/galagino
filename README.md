@@ -108,6 +108,9 @@ the [audio sample conversion](./samples) create a whole bunch of
 additional files in the [galagino directory](./galagino) needed to
 build the binary file.
 
+Please check the README's in the [romconv](./romconv) and [samples](./samples) directories
+for further instructions.
+
 With all these files in place, the galagino.ino sketch can be loaded
 into the [Arduino IDE](https://docs.arduino.cc/software/ide-v2). The
 Arduino IDE must have the [ESP32 board support](https://github.com/espressif/arduino-esp32)
