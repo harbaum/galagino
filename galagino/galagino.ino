@@ -559,8 +559,10 @@ void render_line(short row) {
 
 #ifdef ENABLE_GALAGA
 void galaga_trigger_sound_explosion(void) {
-  snd_boom_cnt = 2*sizeof(galaga_sample_boom);
-  snd_boom_ptr = (const signed char*)galaga_sample_boom;
+  if(game_started) {
+    snd_boom_cnt = 2*sizeof(galaga_sample_boom);
+    snd_boom_ptr = (const signed char*)galaga_sample_boom;
+  }
 }
 #endif
 
@@ -772,11 +774,10 @@ void audio_init(void) {
 #else
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
 #endif
-    .communication_format = (i2s_comm_format_t)I2S_COMM_FORMAT_I2S_MSB,
     .intr_alloc_flags = 0,
     .dma_buf_count = 4,
     .dma_buf_len = 64,   // 64 samples
-    .use_apll = false
+    .use_apll = true
   };
 
   i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
@@ -785,9 +786,12 @@ void audio_init(void) {
   // only dkong installed? Then setup rate immediately
   i2s_set_sample_rates(I2S_NUM_0, 11025);
 #endif
-  
-  i2s_set_pin(I2S_NUM_0, NULL);  // use dac on gpio25/26 */
-  i2s_start(I2S_NUM_0);  
+
+#ifdef SND_DIFF
+  i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
+#else
+  i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
+#endif
 }
 
 void update_screen(void) {
