@@ -22,7 +22,7 @@ the machine in question has to be disabled in the file
 
 The necessary ROM files need be placed in the [roms directory](../roms)
 before these scripts can be run. Once these are converted you need
-also also (convert the audio samples)[../samples].
+also also [convert the audio samples](../samples).
 
 ## Generic ROM conversion
 
