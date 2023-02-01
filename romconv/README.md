@@ -6,7 +6,11 @@ transcription from binary to a equivalent C source file.  But in many
 cases this conversion includes data processing. E.g.  all color tables
 are converted into the 16 bit color format used by the ILI9341 or
 ST7789 displays. Sprite and tile data is converted into a format
-easier to process on the ESP32.
+easier to process on the ESP32. The logo conversion for the menu 
+might require the seperate installation of the ```imageio python module``` which
+can e.g. be done by the following command:
+
+```pip3 install imageio```
 
 This could all be done on the ESP32 target at run time. But here it's
 done beforehand. This offloads these tasks from the EPS32.
