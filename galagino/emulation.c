@@ -190,6 +190,7 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
         irq_enable[Addr & 3] = Value;
       else {
         sub_cpu_reset = !Value;
+        // printf("OUT OF RESET %d\n", !Value);
         credit_mode = 0;   // this also resets the 51xx
       }
       return;
@@ -221,7 +222,7 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
 #endif  
 
 #ifdef ENABLE_DKONG
-  {
+  {   
     if(((Addr & 0xf000) == 0x6000) || ((Addr & 0xf800) == 0x7000)) {
       memory[Addr - 0x6000] = Value;
       return;
@@ -240,6 +241,9 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
       if((Addr & 0xfff0) == 0x7d00 && Value)
         dkong_trigger_sound(Addr & 0x0f);
 
+      if(Addr == 0x7d80 && Value) 
+        dkong_trigger_sound(64);
+      
       if(Addr == 0x7d84)
         irq_enable[0] = Value & 1;
 

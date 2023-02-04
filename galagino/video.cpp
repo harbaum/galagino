@@ -6,6 +6,31 @@
 #include "video.h"
 #include "config.h"
 
+static spi_device_interface_config_t if_cfg {
+  .command_bits = 0,
+  .address_bits = 0,
+  .dummy_bits = 0,
+  .mode = SPI_MODE0,
+  .duty_cycle_pos = 128,
+  .cs_ena_pretrans = 0,
+  .cs_ena_posttrans = 0,
+  .clock_speed_hz = TFT_SPICLK,
+  .input_delay_ns = 0,
+  .spics_io_num = -1,  // 5 = VSPI
+  .flags = SPI_DEVICE_HALFDUPLEX,
+  .queue_size = 3,
+  .pre_cb = NULL,
+  .post_cb = NULL,
+};
+
+spi_bus_config_t bus_cfg {
+  .mosi_io_num = MOSI,
+  .miso_io_num = MISO,
+  .sclk_io_num = SCK,
+  .max_transfer_sz = 224*8*2,  // one complete 8x8 tile row at 16 bpp
+  .flags = SPICOMMON_BUSFLAG_MASTER,
+};
+
 #define W16(a)    (a>>8), (a&0xff)    // store 16 bit parameter
 
 static const uint8_t init_cmd[] = {
@@ -66,17 +91,21 @@ static const uint8_t init_cmd[] = {
 #endif
 };
 
+
 Video::Video() {
   pinMode(TFT_CS, OUTPUT);
   digitalWrite(TFT_CS, HIGH); // Deselect
   pinMode(TFT_DC, OUTPUT);
   digitalWrite(TFT_DC, HIGH); // Data mode
 
+  // allocate a background buffer which is kept untouched during DMA transfer
+  dma_buffer = (unsigned char*)heap_caps_malloc(224*8*2, MALLOC_CAP_DMA);
+
   // 40Mhz is max possible rate with esp32
   // 40Mhz = 2.5MPix/s. A frame has 64512 pixels
   // -> max 38 frames/s = 25.8ms/frame
-  _settings = SPISettings(TFT_SPICLK, MSBFIRST, SPI_MODE0);
-  SPI.begin();
+  spi_bus_initialize(VSPI_HOST, &bus_cfg, SPI_DMA_CH_AUTO);
+  spi_bus_add_device(VSPI_HOST, &if_cfg, &handle);
 
   // trigger hardware reset
   pinMode(TFT_RST, OUTPUT);
@@ -98,44 +127,85 @@ void Video::begin(void) {
       delay(num);
   }
 
-  // the SPI is not shared, so we do everything in one transaction
-  SPI.beginTransaction(_settings);
-
   // write 320x240 16 bit words to zero (black)
   digitalWrite(TFT_CS, LOW);
   setAddrWindow(0, 0, 240, 320);
-  for(int i=0;i<320*240;i++) SPI.write16(0);    
+
+  memset(dma_buffer, 0, 240*4*2);   // 4 lines per transfer, bytes must be less than 224*8*2
+  for(int i=0;i<320/4;i++) {
+    transaction.flags = 0;
+    transaction.length = 240*4*16; // Length in bits
+    transaction.tx_buffer = (const void *)dma_buffer;
+    spi_device_transmit(handle, &transaction);
+  }
 
   // set active screen area to centered 224x288 pixels
   setAddrWindow(TFT_X_OFFSET, TFT_Y_OFFSET, 224, 288);
 }
 
 void Video::write(uint16_t *colors, uint32_t len) {
-  SPI.writeBytes((uint8_t *)colors, len * 2);
+  static char dma_active = 0;
+
+  transaction.flags = 0;
+  transaction.length = 16*len; // Length in bits
+  transaction.tx_buffer = dma_buffer;
+
+  if(dma_active) {
+    spi_transaction_t* r_trans;
+    esp_err_t e = spi_device_get_trans_result(handle, &r_trans, portMAX_DELAY);
+    if (e != ESP_OK) 
+      printf("[ERROR] SPI device get trans result failed: %d\n", e);
+  }
+
+  memcpy(dma_buffer, colors, 2*len);
+  esp_err_t e = spi_device_queue_trans(handle, &transaction, portMAX_DELAY);
+  if (e != ESP_OK) 
+    printf("[ERROR] SPI device queue trans failed: %d\n", e);
+
+  dma_active = 1;
 }
 
 void Video::sendCommand(uint8_t commandByte, uint8_t *dataBytes, uint8_t numDataBytes) {
   digitalWrite(TFT_CS, LOW);
   writeCommand(commandByte);
-  if(numDataBytes)
-    SPI.writeBytes(dataBytes, numDataBytes);
+  for(int i=0;i<numDataBytes;i++)
+    write8(dataBytes[i]);
   digitalWrite(TFT_CS, HIGH);
 }
 
 void Video::writeCommand(uint8_t cmd) {
   digitalWrite(TFT_DC, LOW);
-  SPI.write(cmd);
+  write8(cmd);
   digitalWrite(TFT_DC, HIGH);
 }
 
 void Video::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
   writeCommand(0x2A); // Column address set, same command for ili9341 and st7789
-  SPI.write16(x);
-  SPI.write16(x + w - 1);
-  
+  write16(x);
+  write16(x + w - 1);
+
   writeCommand(0x2B); // Row address set, same command for ili9341 and st7789
-  SPI.write16(y);
-  SPI.write16(y + h - 1);
-  
+  write16(y);
+  write16(y + h - 1);
+
   writeCommand(0x2C); // Write to RAM, same command for ili9341 and st7789
+}
+
+void Video::write16(uint16_t data) {
+  transaction.flags = SPI_TRANS_USE_TXDATA;
+  transaction.length = 16; // Length in bits
+  transaction.rxlength = 0;
+  transaction.tx_data[0] = ((data >> 8) & 0xFF);
+  transaction.tx_data[1] = data & 0xFF;
+
+  spi_device_transmit(handle, &transaction);
+}
+
+void Video::write8(uint8_t data) {
+  transaction.flags = SPI_TRANS_USE_TXDATA;
+  transaction.length = 8; // Length in bits
+  transaction.rxlength = 0;
+  transaction.tx_data[0] = data;
+
+  spi_device_transmit(handle, &transaction);
 }

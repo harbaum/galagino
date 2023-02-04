@@ -23,4 +23,7 @@ The Donkey Kong sounds are not complete, yet.
 ../romconv/romconv.py dkong_sample_howhigh ./dkong_howhigh.s8 ../galagino/dkong_sample_howhigh.h
 ../romconv/romconv.py dkong_sample_bgmus  ./dkong_bgmus.s8 ../galagino/dkong_sample_bgmus.h
 ../romconv/romconv.py dkong_sample_spring ./dkong_spring.s8 ../galagino/dkong_sample_spring.h
+../romconv/romconv.py dkong_sample_die ./dkong_die.s8 ../galagino/dkong_sample_die.h
+../romconv/romconv.py dkong_sample_hit ./dkong_hit.s8 ../galagino/dkong_sample_hit.h
+../romconv/romconv.py dkong_sample_bonus ./dkong_bonus.s8 ../galagino/dkong_sample_bonus.h
 ```

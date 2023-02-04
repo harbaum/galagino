@@ -50,6 +50,9 @@
 #include "dkong_sample_howhigh.h"
 #include "dkong_sample_bgmus.h"
 #include "dkong_sample_spring.h"
+#include "dkong_sample_die.h"
+#include "dkong_sample_hit.h"
+#include "dkong_sample_bonus.h"
 #endif
 
 #ifndef SINGLE_MACHINE
@@ -705,7 +708,13 @@ void dkong_trigger_sound(char snd) {
     dkong_sample_cnt = sizeof(dkong_sample_spring);
     dkong_sample_ptr = (const signed char*)dkong_sample_spring;
   }
-  
+
+  if(snd == 5) {
+    // printf("SFX BONUS\n");
+    dkong_sample_cnt = sizeof(dkong_sample_bonus);
+    dkong_sample_ptr = (const signed char*)dkong_sample_bonus;
+  }
+
   if(snd == 16+1) {        
     // printf("MUS INTRO\n");
     dkong_sample_cnt = sizeof(dkong_sample_intro);
@@ -718,6 +727,12 @@ void dkong_trigger_sound(char snd) {
     dkong_sample_ptr = (const signed char*)dkong_sample_howhigh;
   }
 
+  if(snd == 16+6) {	  
+    // printf("MUS HAMMER HIT\n");
+    dkong_sample_cnt = sizeof(dkong_sample_hit);
+    dkong_sample_ptr = (const signed char*)dkong_sample_hit;
+  }	  
+
   if(snd == 16+8) {        
     // printf("MUS BG\n");
     dkong_sample_cnt = sizeof(dkong_sample_bgmus);
@@ -728,6 +743,12 @@ void dkong_trigger_sound(char snd) {
     // printf("MUS ROAR\n");
     dkong_sample_cnt = sizeof(dkong_sample_roar);
     dkong_sample_ptr = (const signed char*)dkong_sample_roar;
+  }
+
+  if(snd == 64) {       
+    // printf("MUS DIE\n");
+    dkong_sample_cnt = sizeof(dkong_sample_die);
+    dkong_sample_ptr = (const signed char*)dkong_sample_die;
   }
 }
 #endif
@@ -795,7 +816,7 @@ void audio_init(void) {
 }
 
 void update_screen(void) {
-  uint32_t t = micros();
+  uint32_t t0 = micros();
 
 #ifdef ENABLE_PACMAN
   #ifndef SINGLE_MACHINE
@@ -823,40 +844,42 @@ void update_screen(void) {
   #endif
     dkong_prepare_frame();
 #endif
- 
+
+  // max possible video rate:
   // 8*224 pixels = 8*224*16 = 28672 bits
   // 2790 char rows per sec at 40Mhz = max 38 fps
-  for(int c=0;c<36;c+=4) {
-    render_line(c+0); tft.write(frame_buffer, 224*8);
-    render_line(c+1); tft.write(frame_buffer, 224*8);
-    render_line(c+2); tft.write(frame_buffer, 224*8);
-    render_line(c+3); tft.write(frame_buffer, 224*8);
 
-    // audio is refilled 18 times per screen update. The screen is updated
-    // every second frame. So audio is refilled every 9 times per frame.
-    // Audio registers are udated by CPU3 two times per frame.    
-    snd_transmit();
+  // render and transmit screen in two halfs as the display
+  // running at 40Mhz can only update every second 60 hz game frame
+  for(int half=0;half<2;half++) {
+
+    for(int c=18*half;c<18*(half+1);c+=3) {
+      render_line(c+0); tft.write(frame_buffer, 224*8);
+      render_line(c+1); tft.write(frame_buffer, 224*8);
+      render_line(c+2); tft.write(frame_buffer, 224*8);
+
+      // audio is refilled 6 times per screen update. The screen is updated
+      // every second frame. So audio is refilled every 12 times per frame.
+      // Audio registers are udated by CPU3 two times per 30hz frame.
+      snd_transmit();
+    } 
+ 
+    // one screen at 60 Hz is 16.6ms
+    unsigned long t1 = (micros()-t0)/1000;  // calculate time in milliseconds
+    // printf("uspf %d\n", t1);
+    if(t1<(half?33:16)) vTaskDelay((half?33:16)-t1);
+    else if(half)       vTaskDelay(1);    // at least 1 ms delay to prevent watchdog timeout
 
     // physical refresh is 30Hz. So send vblank trigger twice a frame
     // to the emulation. This will make the game run with 60hz speed
-    if(c == 20) xTaskNotifyGive(emulationtask);
-  } 
-
+    xTaskNotifyGive(emulationtask);
+  }
+   
 #ifdef ENABLE_GALAGA
   /* the screen is only updated every second frame, scroll speed is thus doubled */
   static const signed char speeds[8] = { -1, -2, -3, 0, 3, 2, 1, 0 };
   stars_scroll_y += 2*speeds[starcontrol & 7];
 #endif
-  
-  // one screen at 60 Hz is 16.6ms
-  // -> one screen at 30 Hz is 33ms   
-  t = (micros()-t)/1000;  // calculate time in milliseconds
-  if(t<33) vTaskDelay(33-t);
-  else     vTaskDelay(1);    // at least 1 ms delay to prevent watchdog timeout
-
-  xTaskNotifyGive(emulationtask);
-
-  // printf("uspf %d\n", t);
 }
 
 void emulation_task(void *p) {

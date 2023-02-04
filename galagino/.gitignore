@@ -10,3 +10,6 @@ tileaddr.h
 dkong_*.h
 pacman_*.h
 galaga_*.h
+debug.cfg
+debug_custom.json
+esp32.svd
