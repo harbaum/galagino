@@ -134,6 +134,6 @@ Galagino runs fluid and plays perfectly. Still a few things could be optimized.
 
 * ~~Displays allowing for 80MHz SPI clock could run the video at full 60Hz~~ done
 * ~~The SPI display update could be done using DMA which would significantly reduce the load on ESP32 core 0~~ done
-* VGA output could be used to drive a VGA screen
+* [VGA output](http://www.fabglib.org/index.html) could be used to drive a VGA screen
 * The ESP32's bluetooth could be used to connect to a wireless gamepad
 * Galagino could be ported to the [Raspberry Pi Pico and the DVI sock](https://picockpit.com/raspberry-pi/raspberry-pi-pico-video-output/)
