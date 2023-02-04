@@ -1,7 +1,9 @@
 /*
  * galagino.ino - Galaga arcade for ESP32 and Arduino IDE
  *
+ * (c) 2023 Till Harbaum <till@harbaum.org>
  * 
+ * Published under GPLv3
  *
  */
 
@@ -848,7 +850,11 @@ void update_screen(void) {
   // max possible video rate:
   // 8*224 pixels = 8*224*16 = 28672 bits
   // 2790 char rows per sec at 40Mhz = max 38 fps
+#if TFT_SPICLK < 80000000
+#define VIDEO_HALF_RATE
+#endif
 
+#ifdef VIDEO_HALF_RATE
   // render and transmit screen in two halfs as the display
   // running at 40Mhz can only update every second 60 hz game frame
   for(int half=0;half<2;half++) {
@@ -859,7 +865,7 @@ void update_screen(void) {
       render_line(c+2); tft.write(frame_buffer, 224*8);
 
       // audio is refilled 6 times per screen update. The screen is updated
-      // every second frame. So audio is refilled every 12 times per frame.
+      // every second frame. So audio is refilled 12 times per 30 Hz frame.
       // Audio registers are udated by CPU3 two times per 30hz frame.
       snd_transmit();
     } 
@@ -874,6 +880,32 @@ void update_screen(void) {
     // to the emulation. This will make the game run with 60hz speed
     xTaskNotifyGive(emulationtask);
   }
+#else
+  #warning FULL SPEED
+  
+  // render and transmit screen at once as the display
+  // running at 80Mhz can update at full 60 hz game frame
+  for(int c=0;c<36;c+=6) {
+    render_line(c+0); tft.write(frame_buffer, 224*8);
+    render_line(c+1); tft.write(frame_buffer, 224*8);
+    render_line(c+2); tft.write(frame_buffer, 224*8);
+    render_line(c+3); tft.write(frame_buffer, 224*8);
+    render_line(c+4); tft.write(frame_buffer, 224*8);
+    render_line(c+5); tft.write(frame_buffer, 224*8);
+
+    // audio is updated 6 times per 60 Hz frame
+    snd_transmit();
+  } 
+ 
+  // one screen at 60 Hz is 16.6ms
+  unsigned long t1 = (micros()-t0)/1000;  // calculate time in milliseconds
+  printf("uspf %d\n", t1);
+  if(t1<16) vTaskDelay(16-t1);
+  else      vTaskDelay(1);    // at least 1 ms delay to prevent watchdog timeout
+
+  // physical refresh is 60Hz. So send vblank trigger once a frame
+  xTaskNotifyGive(emulationtask);
+#endif
    
 #ifdef ENABLE_GALAGA
   /* the screen is only updated every second frame, scroll speed is thus doubled */
