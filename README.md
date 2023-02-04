@@ -37,7 +37,8 @@ and cheap *galagino* setup.
 These small displays usually allow for SPI clock rates of up to 40MHz
 allowing for a max screen refresh rate of ~30Hz. This is exactly half
 the refresh rate of the original arcade machine. 30Hz is sufficient
-for a very fluid gameplay.
+for a very fluid gameplay. However, with displays coping with 80MHz
+SPI clock, Galagino will run at full 60Hz refresh.
 
 Later in this project the first and third placed games on the Killer List
 of Video games were added together with a little menu at startup.
