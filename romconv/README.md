@@ -63,7 +63,7 @@ disable the RAM and ROM tests of the Galaga arcade machine and speeds up the loa
 For the full retro-experience simply omit the option and the resulting Galagino setup will include all the self tests of the original machine:
 
 ```
-./romconv.py -p galaga_rom_cpu1 ../roms/gg1_1b.3p ../roms/gg1_2b.3m ../roms/gg1_3.2m ../roms/gg1_4b.2l ../galagino/galaga_rom1.h
+./romconv.py galaga_rom_cpu1 ../roms/gg1_1b.3p ../roms/gg1_2b.3m ../roms/gg1_3.2m ../roms/gg1_4b.2l ../galagino/galaga_rom1.h
 ```
 
 The remaining files are just converted without patching.
