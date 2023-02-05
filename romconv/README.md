@@ -53,8 +53,8 @@ and audio waveforms. These can be converted using the following commands:
 Galaga is technically very similar to Pac-Man and needs very similar files. In this case three code ROMs need
 to be converted as the Galaga arcade was driven by three Z80 CPUs.
 
-The Galaga ROM #1 will be patches when given the ```-p``` option. This will
-disable the RAM and ROM tests of the Galaga arcade machine and speeds up the loading of that machine:
+The Galaga ROM for CPU #1 will be patched when given the ```-p``` option. This will
+disable the RAM and ROM tests of the Galaga arcade machine and speed up the loading of that machine in Galagino:
 
 ```
 ./romconv.py -p galaga_rom_cpu1 ../roms/gg1_1b.3p ../roms/gg1_2b.3m ../roms/gg1_3.2m ../roms/gg1_4b.2l ../galagino/galaga_rom1.h
