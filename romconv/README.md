@@ -53,12 +53,26 @@ and audio waveforms. These can be converted using the following commands:
 Galaga is technically very similar to Pac-Man and needs very similar files. In this case three code ROMs need
 to be converted as the Galaga arcade was driven by three Z80 CPUs.
 
+The Galaga ROM #1 will be patches when given the ```-p``` option. This will
+disable the RAM and ROM tests of the Galaga arcade machine and speeds up the loading of that machine:
+
+```
+./romconv.py -p galaga_rom_cpu1 ../roms/gg1_1b.3p ../roms/gg1_2b.3m ../roms/gg1_3.2m ../roms/gg1_4b.2l ../galagino/galaga_rom1.h
+```
+
+For the full retro-experience simply omit the option and the resulting Galagino setup will include all the self tests of the original machine:
+
+```
+./romconv.py -p galaga_rom_cpu1 ../roms/gg1_1b.3p ../roms/gg1_2b.3m ../roms/gg1_3.2m ../roms/gg1_4b.2l ../galagino/galaga_rom1.h
+```
+
+The remaining files are just converted without patching.
+
 ```
 ./audioconv.py galaga_wavetable ../roms/prom-1.1d ../galagino/galaga_wavetable.h
 ./cmapconv.py galaga_colormap_sprites ../roms/prom-5.5n 0 ../roms/prom-3.1c ../galagino/galaga_cmap_sprites.h
 ./cmapconv.py galaga_colormap_tiles ../roms/prom-5.5n 16 ../roms/prom-4.2n ../galagino/galaga_cmap_tiles.h
 ./logoconv.py ../logos/galaga.png ../galagino/galaga_logo.h
-./romconv.py galaga_rom_cpu1 ../roms/gg1_1b.3p ../roms/gg1_2b.3m ../roms/gg1_3.2m ../roms/gg1_4b.2l ../galagino/galaga_rom1.h
 ./romconv.py galaga_rom_cpu2 ../roms/gg1_5b.3f ../galagino/galaga_rom2.h
 ./romconv.py galaga_rom_cpu3 ../roms/gg1_7b.2c ../galagino/galaga_rom3.h
 ./spriteconv.py galaga_sprites galaga ../roms/gg1_11.4d ../roms/gg1_10.4f ../galagino/galaga_spritemap.h
