@@ -72,7 +72,8 @@ The entire setup should be connected as depiced below. The Devkit is
 too wide for the breadboard leaving no space above it to connect
 wires. Thus the wires going to the top pin row of the Devkit are
 placed underneath the DevKit with the connections done as shown in the
-image below.
+image below. See [galagino/config.h](galagino/config.h) for the button
+mappings.
 
 ![Breadboard scheme](images/galagino_bb.png)
 
