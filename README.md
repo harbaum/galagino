@@ -50,7 +50,7 @@ of Video games were added together with a little menu at startup.
 * [Finally playable](https://www.youtube.com/shorts/wqnJzOAAths)
 * [Pac-Man on Galagino](https://www.youtube.com/shorts/F4-XiiPwG1c)
 * [Donkey Kong on Galagino](https://www.youtube.com/shorts/KROFJ0Rtj0w)
-
+* [Boot menu](https://www.youtube.com/shorts/_PJyn06yrtg)
 ## Hardware
 
 The hardware is built around one of those cheap ESP32 development
