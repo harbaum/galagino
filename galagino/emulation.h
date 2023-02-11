@@ -1,6 +1,14 @@
 #ifndef _EMULATION_H_
 #define _EMULATION_H_
 
+#ifdef ENABLE_DKONG
+#define DKONG_AUDIO_QUEUE_LEN   16
+#define DKONG_AUDIO_QUEUE_MASK (DKONG_AUDIO_QUEUE_LEN-1)
+
+extern unsigned char dkong_audio_transfer_buffer[DKONG_AUDIO_QUEUE_LEN][64];
+extern unsigned char dkong_audio_rptr, dkong_audio_wptr;
+#endif
+
 // a total of 7 button is needed for
 // most games
 #define BUTTON_LEFT  0x01

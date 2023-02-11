@@ -7,13 +7,55 @@ DEST="../galagino/"
 
 FILES2COPY=[ "CodesCB.h", "Codes.h", "CodesXX.h", "CodesED.h", "CodesXCB.h", "Tables.h" ]
 
-Z80_EXTRA=b"""
+Z80H_EXTRA=b"""
+#include "config.h"
+#include "emulation.h"
+
+extern char current_cpu;
+extern const unsigned char pacman_rom[];
+extern const unsigned char galaga_rom_cpu1[];
+extern const unsigned char galaga_rom_cpu2[];
+extern const unsigned char galaga_rom_cpu3[];
+extern const unsigned char dkong_rom_cpu1[];
+
+static inline byte OpZ80_INL(register word Addr) {
+#ifdef ENABLE_PACMAN
+  #ifndef SINGLE_MACHINE
+    if(machine == MCH_PACMAN)
+  #endif
+      return pacman_rom[Addr];
+  #ifndef SINGLE_MACHINE
+    else 
+  #endif 
+#endif
+  
+#ifdef ENABLE_GALAGA
+  #ifdef ENABLE_DKONG  
+    if(machine == MCH_GALAGA)
+  #endif 
+    { 
+      if(current_cpu == 1)       return galaga_rom_cpu2[Addr];
+      else if(current_cpu == 2)  return galaga_rom_cpu3[Addr];
+      return galaga_rom_cpu1[Addr];
+    }
+  #ifdef ENABLE_DKONG
+    else /* if(machine == MCH_DKONG) */
+  #endif
+#endif
+
+#ifdef ENABLE_DKONG
+  return dkong_rom_cpu1[Addr];
+#endif
+}
+"""
+
+Z80C_EXTRA=b"""
 void StepZ80(Z80 *R)
 {
   register byte I;
   register pair J;
 
-  I=OpZ80(R->PC.W++);
+  I=OpZ80_INL(R->PC.W++);
 
   switch(I)
   {
@@ -50,13 +92,14 @@ def unpack_z80(name):
                     of.write(b"#define LSB_FIRST              /* Compile for low-endian CPU */\r\n")
                 else:
                     of.write(i + b"\r\n")
+            of.write(Z80H_EXTRA)
     
         # Z80.c gets an additional function
         print("Patching Z80.c")
         code = zip.read("Z80/Z80.c")
         with open(DEST+"Z80.c", "wb") as of:
             of.write(code)
-            of.write(Z80_EXTRA)
+            of.write(Z80C_EXTRA)
 
 unpack_z80(ZIPLOC + ZIP)
 

@@ -117,7 +117,7 @@ if len(sys.argv) < 5:
     print("Usage:",sys.argv[0], "id format <infiles> <outfile>")
     print("  for Galaga:     ", sys.argv[0], "galaga_sprites galaga ../roms/gg1_11.4d ../roms/gg1_10.4f ../galagino/galaga_spritemap.h")
     print("  for Pacman:     ", sys.argv[0], "pacman_sprites pacman ../roms/pacman.5f ../galagino/pacman_spritemap.h")
-    print("  for Donkey Kong:", sys.argv[0], "dkong_sprites dkong ../roms/l_4m_b.bin  ../roms/l_4n_b.bin  ../roms/l_4r_b.bin  ../roms/l_4s_b.bin ../galagino/dkong_spritemap.h")
+    print("  for Donkey Kong:", sys.argv[0], "dkong_sprites dkong ../roms/l_4m_b.bin  ../roms/l_4n_b.bin  ../roms/l_4r_b.bin  ../roms/l_4s_b.bin../galagino/dkong_spritemap.h")
     exit(-1)
     
 parse_spritemap(sys.argv[1], sys.argv[2] == "pacman", sys.argv[3:-1], sys.argv[-1])

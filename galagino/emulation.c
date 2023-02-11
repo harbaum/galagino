@@ -3,7 +3,8 @@
  *
  */
 
-#include <stdio.h>
+#include <stdio.h>    // for printf
+#include <string.h>   // for memcpy
 
 #include "Z80.h"
 #include "config.h"
@@ -21,7 +22,9 @@
 #endif
 
 #ifdef ENABLE_DKONG
-#include "dkong_rom.h"
+#include "dkong_rom1.h"
+#include "dkong_rom2.h"
+#include "i8048.h"
 #endif
 
 extern void StepZ80(Z80 *R);
@@ -62,6 +65,12 @@ unsigned char irq_ptr = 0;
 #ifdef ENABLE_DKONG
 // special variables for dkong
 unsigned char colortable_select = 0;
+
+// the audio cpu is a mb8884 which in turn is 8048/49 compatible
+struct i8048_state_S cpu_8048;
+
+// sound effects register between 8048 and z80
+unsigned char dkong_sfx_index = 0x00;
 #endif
 
 #ifndef SINGLE_MACHINE
@@ -234,16 +243,30 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
       
     if((Addr & 0xfe00) == 0x7c00) {  // 7cxx and 7dxx
       // music effect
-      if(Addr == 0x7c00 && Value) 
-        dkong_trigger_sound(16 + Value);
-
-      // special sound effect
-      if((Addr & 0xfff0) == 0x7d00 && Value)
-        dkong_trigger_sound(Addr & 0x0f);
-
-      if(Addr == 0x7d80 && Value) 
-        dkong_trigger_sound(64);
+      if(Addr == 0x7c00) dkong_sfx_index = Value;
+	
+      // 7d0x
+      if((Addr & 0xfff0) == 0x7d00) {
+ 
+        // trigger samples 0 (walk), 1 (jump) and 2 (stomp)
+        if((Addr & 0x0f) <= 2  && Value)
+          dkong_trigger_sound(Addr & 0x0f);
       
+        if((Addr & 0x0f) == 3) {
+	        if(Value & 1) cpu_8048.p2_state &= ~0x20;
+	        else          cpu_8048.p2_state |=  0x20;
+      	}
+	
+      	if((Addr & 0x0f) == 4)
+	        cpu_8048.T1 = !(Value & 1);
+	
+      	if((Addr & 0x0f) == 5)
+	        cpu_8048.T0 = !(Value & 1);          
+      }
+
+      if(Addr == 0x7d80)
+       cpu_8048.notINT = !(Value & 1);
+
       if(Addr == 0x7d84)
         irq_enable[0] = Value & 1;
 
@@ -405,7 +428,7 @@ unsigned char RdZ80(unsigned short Addr) {
 #ifdef ENABLE_DKONG
   {
     if(Addr < 16384)
-      return dkong_rom[Addr];
+      return dkong_rom_cpu1[Addr];
 
     // 0x6000 - 0x77ff
     if(((Addr & 0xf000) == 0x6000) || ((Addr & 0xf800) == 0x7000)) 
@@ -446,11 +469,79 @@ unsigned char RdZ80(unsigned short Addr) {
   return -1;
 }
 
+#ifdef ENABLE_DKONG
+static unsigned char dkong_audio_assembly_buffer[64];
+unsigned char dkong_audio_transfer_buffer[DKONG_AUDIO_QUEUE_LEN][64];
+unsigned char dkong_audio_rptr = 0, dkong_audio_wptr = 0;
+
+void i8048_port_write(struct i8048_state_S *state, unsigned char port, unsigned char pos) {
+  if(port == 0)
+    return;
+  
+  else if(port == 1) {
+    static int bptr = 0;
+    
+    dkong_audio_assembly_buffer[bptr++] = pos;
+    
+    // buffer now full?
+    if(bptr == 64) {
+      bptr = 0;
+
+      // printf("Dk buffer ready, ptr %d/%d, used %d\n", dkong_audio_wptr, dkong_audio_rptr,  (dkong_audio_wptr - dkong_audio_rptr)&DKONG_AUDIO_QUEUE_MASK);
+      
+      // It must never happen that we get here with no free transfer buffers
+      // available. This would mean that the buffers were full and the
+      // 8048 emulation was still running. It should be stoppped as long as the
+      // buffers are full.
+      if(((dkong_audio_wptr + 1)&DKONG_AUDIO_QUEUE_MASK) == dkong_audio_rptr) {
+        printf("DK audio overflow\n");
+      } else {
+        // copy data into transfer buffer
+        memcpy(dkong_audio_transfer_buffer[dkong_audio_wptr], dkong_audio_assembly_buffer, 64);
+        dkong_audio_wptr = (dkong_audio_wptr + 1)&DKONG_AUDIO_QUEUE_MASK;
+      }
+    }
+    
+    // printf("@%04x DAC WR %02x\n", state->PC-1, pos);
+  } else if(port == 2) {
+    state->p2_state = pos;
+  }
+}
+
+unsigned char i8048_port_read(struct i8048_state_S *state, unsigned char port) {
+  if(port == 2) return state->p2_state;
+  return 0;
+}
+
+void i8048_xdm_write(struct i8048_state_S *state, unsigned char addr, unsigned char data) { }
+
+unsigned char i8048_xdm_read(struct i8048_state_S *state, unsigned char addr) {
+  // printf("@%04x EXT RD %02x\n", state->PC-1, addr);
+
+  // inverted Z80 MUS register
+  if(state->p2_state & 0x40) {
+    // printf("REQ MUS = %d\n", dkong_sfx_index);
+    return dkong_sfx_index ^ 0x0f;
+  }
+  
+  return dkong_rom_cpu2[2048 + addr + 256 * (state->p2_state & 7)];
+}
+
+// this is inlined in emulation.h
+//unsigned char i8048_rom_read(struct i8048_state_S *state, unsigned short addr) {
+//  return dkong_rom_cpu2[addr];
+//}
+#endif
+
 void prepare_emulation(void) {
   memory = malloc(8192);
 
   for(current_cpu=0;current_cpu<3;current_cpu++)
     ResetZ80(&cpu[current_cpu]);
+
+#ifdef ENABLE_DKONG
+  i8048_reset(&cpu_8048);
+#endif      
 }
 
 // one inst at 3Mhz ~ 500k inst/sec = 500000/60 inst per frame
@@ -557,6 +648,14 @@ void emulate_frame(void) {
     // dkong      
     for(int i=0;i<INST_PER_FRAME;i++) {
       StepZ80(cpu); StepZ80(cpu); StepZ80(cpu); StepZ80(cpu);
+
+    	// run audio cpu only when audio transfer buffers are not full. The
+      // audio CPU seems to need more CPU time than the main Z80 itself.
+      if(((dkong_audio_wptr+1)&DKONG_AUDIO_QUEUE_MASK) != dkong_audio_rptr) {
+        i8048_step(&cpu_8048); i8048_step(&cpu_8048);
+        i8048_step(&cpu_8048); i8048_step(&cpu_8048);
+        i8048_step(&cpu_8048); i8048_step(&cpu_8048);
+      }
     }
       
     if(irq_enable[0])
@@ -566,21 +665,24 @@ void emulate_frame(void) {
 
   sof = micros() - sof;
 
-  // it may happen that the emulation runs too slow. It will then miss the
+  // It may happen that the emulation runs too slow. It will then miss the
   // vblank notification and in turn will miss a frame and significantly
   // slow down. This risk is only given with Galaga as the emulation of
   // all three CPUs takes nearly 13ms. The 60hz vblank rate is in turn 
   // 16.6 ms.
 
-  // wait for signal from video task to emulate a 60Hz frame rate
+  // Wait for signal from video task to emulate a 60Hz frame rate. Don't do
+  // this unless the game has actually started to speed up the boot process
+  // a little bit.
   if(game_started
   #ifndef SINGLE_MACHINE
     || (machine == MCH_MENU)
   #endif
-    )
+    )   
     ulTaskNotifyTake(1, 0xffffffffUL);
   else
+    // give a millisecond delay to make the watchdog happy
     vTaskDelay(1);
 
-//  printf("us per frame: %d\n", sof);
+  // printf("us/f: %d\n", sof);
 }

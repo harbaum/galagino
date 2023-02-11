@@ -15,15 +15,12 @@ These have to be converted into C source code using the
 ../romconv/romconv.py galaga_sample_boom ./galaga_boom.s8 ../galagino/galaga_sample_boom.h
 ```
 
-The Donkey Kong sounds are not complete, yet. 
+Donkey Kong does most audio via its MB8884/I8048 audio CPU. But three sounds
+are generated via discrete logic. These are still regenerated using samples.
+
+
 ```
-../romconv/romconv.py dkong_sample_intro ./dkong_intro.s8 ../galagino/dkong_sample_intro.h
+../romconv/romconv.py dkong_sample_walk ./dkong_walk.s8 ../galagino/dkong_sample_walk.h
+../romconv/romconv.py dkong_sample_jump ./dkong_jump.s8 ../galagino/dkong_sample_jump.h
 ../romconv/romconv.py dkong_sample_stomp ./dkong_stomp.s8 ../galagino/dkong_sample_stomp.h
-../romconv/romconv.py dkong_sample_roar  ./dkong_roar.s8 ../galagino/dkong_sample_roar.h
-../romconv/romconv.py dkong_sample_howhigh ./dkong_howhigh.s8 ../galagino/dkong_sample_howhigh.h
-../romconv/romconv.py dkong_sample_bgmus  ./dkong_bgmus.s8 ../galagino/dkong_sample_bgmus.h
-../romconv/romconv.py dkong_sample_spring ./dkong_spring.s8 ../galagino/dkong_sample_spring.h
-../romconv/romconv.py dkong_sample_die ./dkong_die.s8 ../galagino/dkong_sample_die.h
-../romconv/romconv.py dkong_sample_hit ./dkong_hit.s8 ../galagino/dkong_sample_hit.h
-../romconv/romconv.py dkong_sample_bonus ./dkong_bonus.s8 ../galagino/dkong_sample_bonus.h
 ```

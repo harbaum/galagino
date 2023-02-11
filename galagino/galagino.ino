@@ -46,15 +46,10 @@
 #include "dkong_tilemap.h"
 #include "dkong_spritemap.h"
 #include "dkong_cmap.h"
-#include "dkong_sample_intro.h"
+
+#include "dkong_sample_walk.h"
+#include "dkong_sample_jump.h"
 #include "dkong_sample_stomp.h"
-#include "dkong_sample_roar.h"
-#include "dkong_sample_howhigh.h"
-#include "dkong_sample_bgmus.h"
-#include "dkong_sample_spring.h"
-#include "dkong_sample_die.h"
-#include "dkong_sample_hit.h"
-#include "dkong_sample_bonus.h"
 #endif
 
 #ifndef SINGLE_MACHINE
@@ -585,6 +580,17 @@ static unsigned short snd_buffer[64];  // buffer space for a single channel
 #endif
 
 void snd_render_buffer(void) {
+#ifdef ENABLE_DKONG
+  #ifndef SINGLE_MACHINE
+  if(machine == MCH_DKONG)
+  #endif
+  {
+    // audio buffer should be full by now
+    if(dkong_audio_rptr == dkong_audio_wptr)
+      printf("DK audio underrun\n");
+  }
+#endif
+  
   // render first buffer contents
   for(int i=0;i<64;i++) {
     short v = 0;
@@ -620,8 +626,16 @@ void snd_render_buffer(void) {
 #ifndef SINGLE_MACHINE
     else   
 #endif
-    {     
-      // dkong sound rendering
+    {
+      v = 0;  // silence
+
+      // no buffer available
+      if(dkong_audio_rptr != dkong_audio_wptr)
+        // copy data from dkong buffer into tx buffer^
+        // copy at half volume to be able to mix sample in
+        v = dkong_audio_transfer_buffer[dkong_audio_rptr][i];
+        
+      // include sample spounds
       if(dkong_sample_cnt) {
         v += *dkong_sample_ptr++;
         dkong_sample_cnt--;
@@ -647,6 +661,19 @@ void snd_render_buffer(void) {
     snd_cnt[2] += snd_freq[2];
 #endif
   }
+  
+#ifdef ENABLE_DKONG
+  #ifndef SINGLE_MACHINE
+  if(machine == MCH_DKONG)
+  #endif
+  {
+    // advance write pointer. The buffer is a ring
+    dkong_audio_rptr = (dkong_audio_rptr+1)&DKONG_AUDIO_QUEUE_MASK;
+      
+    if(dkong_audio_rptr == dkong_audio_wptr)
+      printf("DK audio buffer emptied\n");
+  }
+#endif
 }
 
 #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
@@ -696,62 +723,22 @@ void audio_namco_waveregs_parse(void) {
 
 #ifdef ENABLE_DKONG
 void dkong_trigger_sound(char snd) {
-  // don't play while already playing
-  if(dkong_sample_cnt) return;
+  static const struct {
+    const signed char *data;
+    const unsigned short length; 
+  } samples[] = {
+    { (const signed char *)dkong_sample_walk,  sizeof(dkong_sample_walk)  },
+    { (const signed char *)dkong_sample_jump,  sizeof(dkong_sample_jump)  },
+    { (const signed char *)dkong_sample_stomp, sizeof(dkong_sample_stomp) }
+  };
+
+  // samples 0 = walk, 1 = jump, 2 = stomp
+
+  // don't play sample while already playing
+  // if(dkong_sample_cnt) return;
   
-  if(snd == 2) {        
-    // printf("SFX STOMP\n");
-    dkong_sample_cnt = sizeof(dkong_sample_stomp);
-    dkong_sample_ptr = (const signed char*)dkong_sample_stomp;
-  }
-          
-  if(snd == 3) {
-    // printf("SFX SPRING/COIN\n");
-    dkong_sample_cnt = sizeof(dkong_sample_spring);
-    dkong_sample_ptr = (const signed char*)dkong_sample_spring;
-  }
-
-  if(snd == 5) {
-    // printf("SFX BONUS\n");
-    dkong_sample_cnt = sizeof(dkong_sample_bonus);
-    dkong_sample_ptr = (const signed char*)dkong_sample_bonus;
-  }
-
-  if(snd == 16+1) {        
-    // printf("MUS INTRO\n");
-    dkong_sample_cnt = sizeof(dkong_sample_intro);
-    dkong_sample_ptr = (const signed char*)dkong_sample_intro;
-  }
-
-  if(snd == 16+2) {        
-    // printf("MUS HOWHIGH\n");
-    dkong_sample_cnt = sizeof(dkong_sample_howhigh);
-    dkong_sample_ptr = (const signed char*)dkong_sample_howhigh;
-  }
-
-  if(snd == 16+6) {	  
-    // printf("MUS HAMMER HIT\n");
-    dkong_sample_cnt = sizeof(dkong_sample_hit);
-    dkong_sample_ptr = (const signed char*)dkong_sample_hit;
-  }	  
-
-  if(snd == 16+8) {        
-    // printf("MUS BG\n");
-    dkong_sample_cnt = sizeof(dkong_sample_bgmus);
-    dkong_sample_ptr = (const signed char*)dkong_sample_bgmus;
-  }
-          
-  if(snd == 16+15) {       
-    // printf("MUS ROAR\n");
-    dkong_sample_cnt = sizeof(dkong_sample_roar);
-    dkong_sample_ptr = (const signed char*)dkong_sample_roar;
-  }
-
-  if(snd == 64) {       
-    // printf("MUS DIE\n");
-    dkong_sample_cnt = sizeof(dkong_sample_die);
-    dkong_sample_ptr = (const signed char*)dkong_sample_die;
-  }
+  dkong_sample_cnt = samples[snd].length;
+  dkong_sample_ptr = samples[snd].data;
 }
 #endif
 
@@ -776,7 +763,15 @@ void snd_transmit() {
 }
 
 void audio_dkong_bitrate(void) {
-  i2s_set_sample_rates(I2S_NUM_0, 11025);
+  // The audio CPU of donkey kong runs at 6Mhz. A full bus
+  // cycle needs 15 clocks which results in 400k cycles
+  // per second. The sound CPU typically needs 34 instruction
+  // cycles to write an updated audio value to the external
+  // DAC connected to port 0.
+  
+  // The effective sample rate thus is 6M/15/34 = 11764.7 Hz
+
+  i2s_set_sample_rates(I2S_NUM_0, 11765);
 }
 
 void audio_init(void) {  
@@ -899,7 +894,7 @@ void update_screen(void) {
  
   // one screen at 60 Hz is 16.6ms
   unsigned long t1 = (micros()-t0)/1000;  // calculate time in milliseconds
-  printf("uspf %d\n", t1);
+//  printf("uspf %d\n", t1);
   if(t1<16) vTaskDelay(16-t1);
   else      vTaskDelay(1);    // at least 1 ms delay to prevent watchdog timeout
 
