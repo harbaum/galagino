@@ -8,7 +8,7 @@
  * general use.
  *
  * Derived from:
- * https://github.com/asig/kosmos-cp1/blob/master/src/main/java/com/asigner/cp1/emulation/Intel8048.java
+ * https://github.com/asig/kosmos-cp1/blob/master/src/main/java/com/asigner/cp1/emulation/Intel8049.java
  */
 
 #include "i8048.h"
