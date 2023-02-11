@@ -44,7 +44,8 @@ Files needed from the [Galaga Namco Rev. B ROM](https://www.bing.com/search?q=ga
 
 Files needed from the [Donkey Kong (US set 1)](https://www.bing.com/search?q=donkey+kong+arcade+rom) romset:
 
-* ```c_5et_g.bin```, ```c_5ct_g.bin```, ```c_5bt_g.bin```, ```c_5at_g.bin``` - CPU rom
+* ```c_5et_g.bin```, ```c_5ct_g.bin```, ```c_5bt_g.bin```, ```c_5at_g.bin``` - CPU1 rom
+* ```s_3i_b.bin```, ```s_3j_b.bin``` - CPU2 rom
 * ```v_5h_b.bin```, ```v_3pt.bin``` - tile graphics
 * ```l_4m_b.bin```, ```l_4n_b.bin```, ```l_4r_b.bin```, ```l_4s_b.bin``` - sprite graphics
 * ```c-2j.bpr```, ```v-5e.bpr``` - colormap
