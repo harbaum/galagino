@@ -1,12 +1,12 @@
 # Samples
 
-Some acade machines contained special hardware to generate certains
-sounds. Emulating this hardware is rather tricky and the flash
-memory size of the ESP32 allows to store some of these as
-digital sound samples.
+Some acade machines contained special hardware to generate certain
+sounds. Emulating this hardware may be tricky and the flash memory
+size of the ESP32 allows to store some of these as digital sound
+samples.
 
 This directory contains one sample needed for the explosion sound
-in Galaga and a few more samples for Donkey Kong.
+in Galaga and three more samples for Donkey Kong.
 
 These have to be converted into C source code using the
 (romconv.py)[../romconv/romconv.py] tool.
