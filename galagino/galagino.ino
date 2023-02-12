@@ -82,8 +82,8 @@ const signed char *snd_boom_ptr = NULL;
 
 #ifdef ENABLE_DKONG
 // todo: allow for more samples in parallel
-unsigned short dkong_sample_cnt = 0;
-const signed char *dkong_sample_ptr = NULL;
+unsigned short dkong_sample_cnt[3] = { 0,0,0 };
+const signed char *dkong_sample_ptr[3];
 #endif
 
 #ifdef ENABLE_PACMAN
@@ -631,20 +631,19 @@ void snd_render_buffer(void) {
 
       // no buffer available
       if(dkong_audio_rptr != dkong_audio_wptr)
-        // copy data from dkong buffer into tx buffer^
-        // copy at half volume to be able to mix sample in
+        // copy data from dkong buffer into tx buffer
+        // 8048 sounds gets 50% of the available volume range
         v = dkong_audio_transfer_buffer[dkong_audio_rptr][i];
-        
+          
       // include sample spounds
-      if(dkong_sample_cnt) {
-        v += *dkong_sample_ptr++;
-        dkong_sample_cnt--;
-      }
+      // walk and jump are at 12.5% volume, stomp is at 25%
+      if(dkong_sample_cnt[0]) { v += *dkong_sample_ptr[0]++ >> 1; dkong_sample_cnt[0]--; }
+      if(dkong_sample_cnt[1]) { v += *dkong_sample_ptr[1]++ >> 1; dkong_sample_cnt[1]--; }
+      if(dkong_sample_cnt[2]) { v += *dkong_sample_ptr[2]++;      dkong_sample_cnt[2]--; }
     }
 #endif
     
-    // v is now max 3*15*(15-7)+127 = 487 and min 3 * 15 * (0-7) - 128 = -443
-    // expand to +/- 15 bit
+    // v is now in the range of +/- 512, so expand to +/- 15 bit
     v = v*64;
 
 #ifdef SND_DIFF
@@ -737,8 +736,8 @@ void dkong_trigger_sound(char snd) {
   // don't play sample while already playing
   // if(dkong_sample_cnt) return;
   
-  dkong_sample_cnt = samples[snd].length;
-  dkong_sample_ptr = samples[snd].data;
+  dkong_sample_cnt[snd] = samples[snd].length;
+  dkong_sample_ptr[snd] = samples[snd].data;
 }
 #endif
 
