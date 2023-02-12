@@ -81,7 +81,6 @@ const signed char *snd_boom_ptr = NULL;
 #endif
 
 #ifdef ENABLE_DKONG
-// todo: allow for more samples in parallel
 unsigned short dkong_sample_cnt[3] = { 0,0,0 };
 const signed char *dkong_sample_ptr[3];
 #endif
@@ -999,6 +998,29 @@ unsigned char buttons_get(void) {
         virtual_coin_state = 0;   // button has been released, return to idle
       break;
   }
+#endif
+
+#ifndef SINGLE_MACHINE
+  static unsigned long reset_timer = 0;
+  
+  // reset if coin (or start if no coin is configured) is held for
+  // more than 1 second
+  if(!digitalRead(
+#ifdef BTN_COIN_PIN
+    BTN_COIN_PIN
+#else
+    BTN_START_PIN
+#endif
+  )) {
+    if(machine != MCH_MENU) {    
+      if(!reset_timer)
+        reset_timer = millis();
+
+      if(millis() - reset_timer > 1000)
+        ESP.restart();
+    }    
+  } else
+    reset_timer = 0;
 #endif
   
   return 
