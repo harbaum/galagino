@@ -9,7 +9,7 @@ This directory contains one sample needed for the explosion sound
 in Galaga and three more samples for Donkey Kong.
 
 These have to be converted into C source code using the
-(romconv.py)[../romconv/romconv.py] tool.
+[romconv.py](../romconv/romconv.py) tool.
 
 ```
 ../romconv/romconv.py galaga_sample_boom ./galaga_boom.s8 ../galagino/galaga_sample_boom.h
