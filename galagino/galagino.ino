@@ -634,11 +634,14 @@ void snd_render_buffer(void) {
         // 8048 sounds gets 50% of the available volume range
         v = dkong_audio_transfer_buffer[dkong_audio_rptr][i];
           
-      // include sample spounds
-      // walk and jump are at 12.5% volume, stomp is at 25%
-      if(dkong_sample_cnt[0]) { v += *dkong_sample_ptr[0]++ >> 1; dkong_sample_cnt[0]--; }
-      if(dkong_sample_cnt[1]) { v += *dkong_sample_ptr[1]++ >> 1; dkong_sample_cnt[1]--; }
-      if(dkong_sample_cnt[2]) { v += *dkong_sample_ptr[2]++;      dkong_sample_cnt[2]--; }
+      // include sample sounds
+      // walk is 6.25% volume, jump is at 12.5% volume and, stomp is at 25%
+      for(char i=0;i<3;i++) {
+        if(dkong_sample_cnt[i]) {
+          v += *dkong_sample_ptr[i]++ >> (2-i); 
+          dkong_sample_cnt[i]--;
+        }
+      }
     }
 #endif
     
