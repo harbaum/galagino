@@ -5,22 +5,23 @@ Galaga, Pac-Man and Donkey Kong for the ESP32
 ## Arcade emulator for ESP32
 
 ![menu screenshot](images/menu.png)
+![Pac-Man screenshot](images/pacman.gif)
 ![Galaga screencast](images/galagino.gif)
-![Pac-Man screenshot](images/pacman.png)
-![Donkey Kong screenshot](images/dkong.png)
+![Donkey Kong screenshot](images/dkong.gif)
 
-[Galaga](https://de.wikipedia.org/wiki/Galaga) is one of the most
-iconic arcade machines of all times and is listed on place #2 on
-the [Killer List of Video Games](http://www.klov.net), right after
-Pac-Man and before Donkey Kong.
+[Pac-Man](https://en.wikipedia.org/wiki/Pac-Man),
+[Galaga](https://en.wikipedia.org/wiki/Galaga) and
+[Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong) are three of the most
+iconic arcade machines of all times and are listed on place #1 to #3
+on the [Killer List of Video Games](http://www.klov.net).
 
-Galaga has been remade and emulated many times. So far the cheapest
-and smallest system able to do a faithful emulation of the original
-arcade machine was the raspberry pi. But even the much cheaper ESP32
-should be able to easily emulate a machine from the early ’80s,
-shouldn't it?
+Especially Pac-Man and Galaga habe been remade and emulated many
+times. So far the cheapest and smallest system able to do a faithful
+emulation of the original arcade machines was the raspberry pi. But
+even the much cheaper ESP32 should be able to easily emulate a machine
+from the early ’80s, shouldn't it?
 
-Well, things are not that easy. The galaga arcade was driven by three
+Well, things are not that easy. The Galaga arcade was driven by three
 Z80 CPUs, each running at 3Mhz. Additionally the arcade machine
 included two more CPUs for button and coin handling and for audio
 support. And finally the hardware itself had dedicated support
