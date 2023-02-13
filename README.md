@@ -11,7 +11,7 @@ Galaga, Pac-Man and Donkey Kong for the ESP32
 
 [Pac-Man](https://en.wikipedia.org/wiki/Pac-Man),
 [Galaga](https://en.wikipedia.org/wiki/Galaga) and
-[Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong) are three of the most
+[Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(video_game)) are three of the most
 iconic arcade machines of all times and are listed on place #1 to #3
 on the [Killer List of Video Games](http://www.klov.net).
 
