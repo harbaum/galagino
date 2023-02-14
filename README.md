@@ -15,7 +15,7 @@ Galaga, Pac-Man and Donkey Kong for the ESP32
 iconic arcade machines of all times and are listed on place #1 to #3
 on the [Killer List of Video Games](http://www.klov.net).
 
-Especially Pac-Man and Galaga habe been remade and emulated many
+Especially Pac-Man and Galaga have been remade and emulated many
 times. So far the cheapest and smallest system able to do a faithful
 emulation of the original arcade machines was the raspberry pi. But
 even the much cheaper ESP32 should be able to easily emulate a machine
