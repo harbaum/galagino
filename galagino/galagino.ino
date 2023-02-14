@@ -47,7 +47,9 @@
 #include "dkong_spritemap.h"
 #include "dkong_cmap.h"
 
-#include "dkong_sample_walk.h"
+#include "dkong_sample_walk0.h"
+#include "dkong_sample_walk1.h"
+#include "dkong_sample_walk2.h"
 #include "dkong_sample_jump.h"
 #include "dkong_sample_stomp.h"
 #endif
@@ -728,18 +730,24 @@ void dkong_trigger_sound(char snd) {
     const signed char *data;
     const unsigned short length; 
   } samples[] = {
-    { (const signed char *)dkong_sample_walk,  sizeof(dkong_sample_walk)  },
+    { (const signed char *)dkong_sample_walk0, sizeof(dkong_sample_walk0) },
+    { (const signed char *)dkong_sample_walk1, sizeof(dkong_sample_walk1) },
+    { (const signed char *)dkong_sample_walk2, sizeof(dkong_sample_walk2) },
     { (const signed char *)dkong_sample_jump,  sizeof(dkong_sample_jump)  },
     { (const signed char *)dkong_sample_stomp, sizeof(dkong_sample_stomp) }
   };
 
   // samples 0 = walk, 1 = jump, 2 = stomp
 
-  // don't play sample while already playing
-  // if(dkong_sample_cnt) return;
-  
-  dkong_sample_cnt[snd] = samples[snd].length;
-  dkong_sample_ptr[snd] = samples[snd].data;
+  if(!snd) {
+    // walk0, walk1 and walk2 are variants
+    char rnd = random() % 3;
+    dkong_sample_cnt[0] = samples[rnd].length;
+    dkong_sample_ptr[0] = samples[rnd].data;
+  } else {
+    dkong_sample_cnt[snd] = samples[snd+2].length;
+    dkong_sample_ptr[snd] = samples[snd+2].data;
+  }
 }
 #endif
 

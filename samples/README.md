@@ -15,12 +15,15 @@ These have to be converted into C source code using the
 ../romconv/romconv.py galaga_sample_boom ./galaga_boom.s8 ../galagino/galaga_sample_boom.h
 ```
 
-Donkey Kong does most audio via its MB8884/I8048 audio CPU. But three sounds
-are generated via discrete logic. These are still regenerated using samples.
+Donkey Kong does most audio via its MB8884/I8048 audio CPU. But three
+sounds are generated via discrete logic including three variants of
+the walk sound. These are still regenerated using samples.
 
 
 ```
-../romconv/romconv.py dkong_sample_walk ./dkong_walk.s8 ../galagino/dkong_sample_walk.h
+../romconv/romconv.py dkong_sample_walk0 ./dkong_walk0.s8 ../galagino/dkong_sample_walk0.h
+../romconv/romconv.py dkong_sample_walk1 ./dkong_walk1.s8 ../galagino/dkong_sample_walk1.h
+../romconv/romconv.py dkong_sample_walk2 ./dkong_walk2.s8 ../galagino/dkong_sample_walk2.h
 ../romconv/romconv.py dkong_sample_jump ./dkong_jump.s8 ../galagino/dkong_sample_jump.h
 ../romconv/romconv.py dkong_sample_stomp ./dkong_stomp.s8 ../galagino/dkong_sample_stomp.h
 ```
