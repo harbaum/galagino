@@ -141,6 +141,12 @@ void Video::begin(void) {
 
   // set active screen area to centered 224x288 pixels
   setAddrWindow(TFT_X_OFFSET, TFT_Y_OFFSET, 224, 288);
+
+  // enable backlight if pin is specified
+#ifdef TFT_BL
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, HIGH);
+#endif
 }
 
 void Video::write(uint16_t *colors, uint32_t len) {

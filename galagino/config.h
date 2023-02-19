@@ -30,6 +30,7 @@
 #define TFT_CS   5
 #define TFT_DC  32
 #define TFT_RST 27
+#define TFT_BL  13    // don't set if backlight is hard wired
 #define TFT_ILI9341   // define for ili9341, otherwise st7789
 // #define TFT_VFLIP            // define for upside down
 
