@@ -1027,8 +1027,13 @@ unsigned char buttons_get(void) {
       if(!reset_timer)
         reset_timer = millis();
 
-      if(millis() - reset_timer > 1000)
+      if(millis() - reset_timer > 1000) {
+        // disable backlight if pin is specified
+#ifdef TFT_BL
+        digitalWrite(TFT_BL, LOW);
+#endif
         ESP.restart();
+      }
     }    
   } else
     reset_timer = 0;
