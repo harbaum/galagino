@@ -17,3 +17,5 @@ Additionally needed:
 The control boards surface is 50mm wide and thus matches the width
 of a 2.8 inch TFT display. The control board has two 3x10mm flanges
 to be used with a small laser cut cabinet.
+
+![Photo](controlboard.jpg)
