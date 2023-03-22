@@ -102,17 +102,20 @@ The software consists of three parts:
     * [Donkey Kong (US set 1)](https://www.bing.com/search?q=donkey+kong+arcade+rom)
 * A [Z80 software emulation](https://fms.komkon.org/EMUL8/Z80-081707.zip)
 
-The ROM files have to be placed in the [roms directory](roms/),
-together with the ZIP file containing the Z80 emulator. A set of
-[python scripts](romconv/) is then being used to convert and patch the
-ROM data and emulator code and to include the resulting code into the
-galagino sketch directory. The [ROM conversion](./romconv) as well as
-the [audio sample conversion](./samples) create a whole bunch of
-additional files in the [galagino directory](./galagino) needed to
-build the binary file.
+Galagino uses code that is not freely available and thus not included in this
+repository. Preparing the firmware thus consists of a few additional steps:
 
-Please check the README's in the [romconv](./romconv) and [samples](./samples) directories
-for further instructions.
+* The ROM files have to be placed in the [roms directory](roms/), together with the ZIP file containing the Z80 emulator.
+* A set of [python scripts](romconv/) is then being used to convert and
+ patch the ROM data and emulator code and to include the resulting code into the
+galagino sketch directory.
+* The same scripts are afterwards being used to convert [audio sample files](./samples) into the desired format.
+
+The [ROM conversion](./romconv) as well as the [audio sample
+conversion](./samples) create a whole bunch of additional files in the
+[galagino directory](./galagino). Please check the README's in the
+[romconv](./romconv) and [samples](./samples) directories for further
+instructions.
 
 With all these files in place, the galagino.ino sketch can be loaded
 into the [Arduino IDE](https://docs.arduino.cc/software/ide-v2). The
