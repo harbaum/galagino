@@ -1,6 +1,6 @@
 # Samples
 
-Some acade machines contained special hardware to generate certain
+Some arcade machines contained special hardware to generate certain
 sounds. Emulating this hardware may be tricky and the flash memory
 size of the ESP32 allows to store some of these as digital sound
 samples.
