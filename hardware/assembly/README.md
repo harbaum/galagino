@@ -18,7 +18,7 @@ with the display wiring afterwards.
 
 [PDF](wire_control.pdf)
 
-This connects the [controlboard](./controlboard/) and the coin button
+This connects the [controlboard](../controlboard/) and the coin button
 to the ESP32 board. You can solder the wires directly to the ESP32 board
 or use female pin headers if you want to be able to easily replace
 the ESP32.
@@ -50,6 +50,9 @@ requires only three wires:
 
 [PDF](wire_audio_led.pdf)
 
-The finally assembly should then look like this:
+The final assembly should then look like this:
 
 ![assembled](assembled.jpg)
+
+The amplifier board cannot be seen as it's taped to the back of the speaker
+compartment using double sided tape.
