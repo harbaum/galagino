@@ -10,29 +10,41 @@ compact than the breadboard allows.
 
 ## Wiring 
 
-First are the controls (buttons) connected. These need to be wired
-first as they are located right beside the ESP32 board and its wires
+Wiring takes place in a certain order and arrangement in order
+to be able to place the result nicely inside the cabinet.
+
+### Buttons
+
+First are the buttons have to be connected. These need to be wired
+first as they are located right beside the ESP32 board and their wires
 would interfere with the display wiring afterwards.
 
 ![controls](wire_control.png)
 
 [PDF](wire_control.pdf)
 
-This connects the [controlboard](../controlboard/) and the
+This step connects the [controlboard](../controlboard/) and the
 [coin button](../coinbutton) to the ESP32 board. You can solder the wires
 directly to the ESP32 board or use female pin headers if you want to
 be able to easily replace the ESP32.
 
 ![controls](wire_control.jpg)
 
-Next is the display.
+### Display
 
-![controls](wire_display.png)
+The next to wire up is the display.
+
+![Display](wire_display.png)
 
 [PDF](wire_display.pdf)
 
-Its connections are on top of the control wires so the display can
-later be mounted directly above the controls.
+Arranging all wires in a neat way makes the soldering much easier
+and robust and will later ease assembly.
+
+![Solder](display_solder.jpg)
+
+The displays connections are placed on top of the control wires so the
+display can later be mounted directly above the controls.
 
 ![displays](wire_display.jpg)
 
@@ -56,3 +68,5 @@ The final assembly should then look like this:
 
 The amplifier board cannot be seen as it's taped to the back of the speaker
 compartment using double sided tape.
+
+![Speaker](speaker_amp.jpg)
