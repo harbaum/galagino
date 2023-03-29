@@ -4,7 +4,7 @@ The cabinet is built from 15 lasercut 3mm plywood parts.
 
 ![The assembled cabinet](assembled.jpg)
 
-The cabinet consits of two main side sections and 13 parts to be
+The cabinet consists of two main side sections and 13 parts to be
 mounted between both sides. The electronic parts are either secured
 between two wooden parts (the display between parts 1, 5 and 10 and
 the ESP32 between parts 11 and 13) or screwed to a wooden part (the
@@ -44,12 +44,10 @@ the display and plywood part 10.
 
 ![Marquee LEDs detail](marquee_leds.jpg)
 
-All parts are assembled onto on of the two identical side parts.
-Then the second side is mounted.
+All parts are assembled onto one of the two identical side parts. Afterwards the second side is mounted.
 
-It's easiest to leave the rear part 12 open while attaching the second
-side, so the other parts inside can be reached from the rear and moved
-to their exact positions until both sides attach firmly.
+It's helpful to leave the rear part 12 open while attaching the second
+side. That way the other parts inside can be reached from the rear and be moved to their exact positions until both sides attach firmly.
 
 ![One side open](side_open.jpg)
 
