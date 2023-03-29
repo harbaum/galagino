@@ -1,7 +1,6 @@
-# Hardware Assembly
+# Electronics Assembly
 
-If the hardware is to be placed inside a tiny arcade like
-the one depicted below, then it needs to be assembled more
+If the hardware is to be placed inside a [tiny arcade cabinet](../cabinet), then it needs to be assembled more
 compact than the breadboard allows.
 
 ![Cardboard arcade](galagino_cardboard_arcade.jpg)
@@ -10,12 +9,11 @@ compact than the breadboard allows.
 
 ## Wiring 
 
-Wiring takes place in a certain order and arrangement in order
-to be able to place the result nicely inside the cabinet.
+Wiring takes place in a certain order and arrangement to be able to place the result nicely inside [the cabinet](../cabinet).
 
 ### Buttons
 
-First are the buttons have to be connected. These need to be wired
+First the buttons have to be connected. These need to be wired
 first as they are located right beside the ESP32 board and their wires
 would interfere with the display wiring afterwards.
 
