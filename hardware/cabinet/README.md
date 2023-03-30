@@ -1,8 +1,7 @@
 # Cabinet
 
 The cabinet is built from 15 lasercut 3mm plywood parts and is designed to
-house common off-the-shelf electronic components. The exact components are
-listed [here](../). 
+house [common off-the-shelf electronic components](../).
 
 The cabinet may have to be modified If different parts are being used.
 
