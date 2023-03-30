@@ -5,6 +5,7 @@ Galaga, Pac-Man and Donkey Kong for the ESP32
 ## Arcade emulator for ESP32
 
 ![menu screenshot](images/menu.png)
+
 ![Pac-Man screenshot](images/pacman.gif)
 ![Galaga screencast](images/galagino.gif)
 ![Donkey Kong screenshot](images/dkong.gif)
@@ -40,9 +41,6 @@ allowing for a max screen refresh rate of ~30Hz. This is exactly half
 the refresh rate of the original arcade machine. 30Hz is sufficient
 for a very fluid gameplay. However, with displays coping with 80MHz
 SPI clock, Galagino will run at full 60Hz refresh.
-
-Later in this project the first and third placed games on the Killer List
-of Video games were added together with a little menu at startup.
 
 ## Youtube videos
 
