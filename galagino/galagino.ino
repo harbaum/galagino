@@ -11,6 +11,8 @@
 
 #include "driver/i2s.h"
 #include "video.h"
+#include "leds.h"
+
 #include "emulation.h"
 
 #include "tileaddr.h"
@@ -58,6 +60,7 @@
 signed char machine = MCH_MENU;   // start with menu
 #endif
 
+// instance of main tft driver
 Video tft = Video();
 
 // buffer space for one row of 28 characters
@@ -67,10 +70,7 @@ TaskHandle_t emulationtask;
 
 // the hardware supports 64 sprites
 unsigned char active_sprites = 0;
-struct sprite_S {
-  unsigned char code, color, flags;
-  short x, y; 
-} *sprite;
+struct sprite_S *sprite;
 
 #ifdef ENABLE_GALAGA
 unsigned char stars_scroll_y = 0;
@@ -86,6 +86,14 @@ const signed char *snd_boom_ptr = NULL;
 unsigned short dkong_sample_cnt[3] = { 0,0,0 };
 const signed char *dkong_sample_ptr[3];
 #endif
+
+// one method to return to the main menu is to reset
+// the entire machine. The main disadvantage is a 
+// short noise from the speaker during reset
+extern "C" void hw_reset(void);
+void hw_reset(void) {
+  ESP.restart();
+}
 
 #ifdef ENABLE_PACMAN
 void pacman_prepare_frame(void) {
@@ -120,6 +128,8 @@ void pacman_prepare_frame(void) {
 void galaga_prepare_frame(void) {
   // Do all the preparations to render a screen.
   
+  leds_state_reset();
+  
   /* preprocess sprites */
   active_sprites = 0;
   for(int idx=0;idx<64 && active_sprites<92;idx++) {
@@ -139,6 +149,10 @@ void galaga_prepare_frame(void) {
       if((spr.code < 128) &&
     	   (spr.y > -16) && (spr.y < 288) &&
 	       (spr.x > -16) && (spr.x < 224)) {      
+
+#ifdef LED_PIN
+        leds_check_galaga_sprite(&spr);
+#endif
 
     	  // save sprite in list of active sprites
 	      sprite[active_sprites] = spr;
@@ -771,7 +785,7 @@ void snd_transmit() {
   } while(bytesOut);
 }
 
-void audio_dkong_bitrate(void) {
+void audio_dkong_bitrate(char is_dkong) {
   // The audio CPU of donkey kong runs at 6Mhz. A full bus
   // cycle needs 15 clocks which results in 400k cycles
   // per second. The sound CPU typically needs 34 instruction
@@ -780,7 +794,7 @@ void audio_dkong_bitrate(void) {
   
   // The effective sample rate thus is 6M/15/34 = 11764.7 Hz
 
-  i2s_set_sample_rates(I2S_NUM_0, 11765);
+  i2s_set_sample_rates(I2S_NUM_0, is_dkong?11765:24000);
 }
 
 void audio_init(void) {  
@@ -811,7 +825,7 @@ void audio_init(void) {
 
 #if defined(SINGLE_MACHINE) && defined(ENABLE_DKONG)
   // only dkong installed? Then setup rate immediately
-  i2s_set_sample_rates(I2S_NUM_0, 11025);
+  audio_dkong_bitrate(true);
 #endif
 
 #ifdef SND_DIFF
@@ -952,7 +966,14 @@ void setup() {
   pinMode(BTN_UP_PIN, INPUT_PULLUP);
   pinMode(BTN_FIRE_PIN, INPUT_PULLUP);
 
+  // initialize audio to default bitrate (24khz unless dkong is
+  // the inly game installed, then audio will directly be 
+  // initialized to dkongs 11765hz)
   audio_init();
+
+#ifdef LED_PIN
+  leds_init();
+#endif
 
   // let the cpu emulation run on the second core, so the main core
   // can completely focus on video
@@ -1023,7 +1044,15 @@ unsigned char buttons_get(void) {
     BTN_START_PIN
 #endif
   )) {
-    if(machine != MCH_MENU) {    
+    if(machine != MCH_MENU) {
+
+#ifdef MASTER_ATTRACT_GAME_TIMEOUT
+       // if the game was started by the master attract mode then the user
+       // pressing coin (or start) stops the timer, so the game keeps
+       // running as long as the user wants
+       master_attract_timeout = 0;
+#endif
+
       if(!reset_timer)
         reset_timer = millis();
 
@@ -1032,7 +1061,8 @@ unsigned char buttons_get(void) {
 #ifdef TFT_BL
         digitalWrite(TFT_BL, LOW);
 #endif
-        ESP.restart();
+
+        emulation_reset();
       }
     }    
   } else
@@ -1060,4 +1090,8 @@ void loop(void) {
   // to the emulation task in the background to 
   // synchronize video
   update_screen(); 
+
+#ifdef LED_PIN
+  leds_update();
+#endif
 }

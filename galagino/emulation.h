@@ -62,7 +62,15 @@ extern signed char menu_sel;
 #endif
 #ifdef ENABLE_DKONG
 extern unsigned char colortable_select;
-extern void audio_dkong_bitrate(void);
+extern void audio_dkong_bitrate(char);
+#endif
+
+#ifndef SINGLE_MACHINE
+extern void emulation_reset(void);
+
+#ifdef MASTER_ATTRACT_MENU_TIMEOUT
+extern unsigned long master_attract_timeout;
+#endif
 #endif
 
 // external functions called by emulation

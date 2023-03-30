@@ -18,7 +18,10 @@
 #endif
 
 // game config
-// #define FREEPLAY     // define for free play, no coin button required, but also no attract mode
+// #define FREEPLAY     // define for free play, no coin button required, but also no attract mode. Warning: dkong has no freeplay at all
+
+#define MASTER_ATTRACT_MENU_TIMEOUT  20000   // start games randomly while sitting idle in menu for 20 seconds, undefine to disable
+// #define MASTER_ATTRACT_GAME_TIMEOUT  10000
 
 // include dip switches after defining FREEPLAY as e.g. galaga has a
 // freeplay dip 
@@ -32,11 +35,14 @@
 #define TFT_RST 27
 #define TFT_BL  13    // don't set if backlight is hard wired
 #define TFT_ILI9341   // define for ili9341, otherwise st7789
-// #define TFT_VFLIP            // define for upside down
+#define TFT_VFLIP     // define for upside down
 
 // x and y offset of 224x288 pixels inside the 240x320 screen
 #define TFT_X_OFFSET  8
 #define TFT_Y_OFFSET 16
+
+#define LED_PIN        16   // pin used for optional WS2812 stripe
+#define LED_BRIGHTNESS 50   // range 0..255
 
 // audio config
 // #define SND_DIFF   // set to output differential audio on GPIO25 _and_ inverted on GPIO26

@@ -3,6 +3,12 @@
  *
  */
 
+/*
+ * TODO: 
+ * Don't use reset to return to menu in order to suppress noise when returning from master attract game
+ * 
+ */
+
 #include <stdio.h>    // for printf
 #include <string.h>   // for memcpy
 
@@ -75,6 +81,12 @@ unsigned char dkong_sfx_index = 0x00;
 
 #ifndef SINGLE_MACHINE
 signed char menu_sel = (int)((MACHINES+1)/2);       // default in game selection
+
+#ifdef MASTER_ATTRACT_MENU_TIMEOUT
+// menu timeout for master attract mode which randomly start games
+unsigned long master_attract_timeout = 0;
+#endif
+
 #endif
 
 #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
@@ -123,7 +135,9 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
     }
     
     if((Addr & 0xf000) == 0x4000) {
-      if(Addr == 0x4000 + 989 && Value == 0x3e)
+      // writing 85 (U, first char of UP) to the top left corner
+      // is an indication that the game has booted up      
+      if(Addr == 0x4000 + 985 && Value == 85)
         game_started = 1;
       
       memory[Addr - 0x4000] = Value;
@@ -469,6 +483,30 @@ unsigned char RdZ80(unsigned short Addr) {
   return -1;
 }
 
+#ifndef SINGLE_MACHINE
+extern void hw_reset(void);
+
+// return to main menu
+void emulation_reset(void) {
+#if 1
+  hw_reset();
+#else
+  printf("EMULATION RESET!!!\n");
+
+  // return to menu
+  machine = MCH_MENU;
+
+  // reset all CPUs
+  for(current_cpu=0;current_cpu<3;current_cpu++)
+    ResetZ80(&cpu[current_cpu]);
+
+#ifdef ENABLE_DKONG
+  i8048_reset(&cpu_8048);
+#endif      
+#endif
+}
+#endif
+
 #ifdef ENABLE_DKONG
 static unsigned char dkong_audio_assembly_buffer[64];
 unsigned char dkong_audio_transfer_buffer[DKONG_AUDIO_QUEUE_LEN][64];
@@ -536,6 +574,10 @@ unsigned char i8048_xdm_read(struct i8048_state_S *state, unsigned char addr) {
 void prepare_emulation(void) {
   memory = malloc(8192);
 
+#ifdef MASTER_ATTRACT_MENU_TIMEOUT
+  master_attract_timeout = millis();
+#endif
+
   for(current_cpu=0;current_cpu<3;current_cpu++)
     ResetZ80(&cpu[current_cpu]);
 
@@ -566,11 +608,13 @@ void emulate_frame(void) {
 	    !(last_mask & BUTTON_START))) {
 	    machine = menu_sel;
 
+	    // stop master attract mode
+	    master_attract_timeout = 0;
+  
 #ifdef ENABLE_DKONG
       // dkong uses a different sample rate, so reconfigure audio if
       // kong is requested
-      if(machine == MCH_DKONG)
-        audio_dkong_bitrate();
+      audio_dkong_bitrate(machine == MCH_DKONG);
 #endif
     }
 
@@ -578,6 +622,24 @@ void emulate_frame(void) {
     if(menu_sel > MACHINES)  menu_sel = MACHINES;
       
     last_mask = keymask;
+
+#ifdef MASTER_ATTRACT_MENU_TIMEOUT
+    // check for master attract timeout
+    if(master_attract_timeout && 
+      (millis() - master_attract_timeout > MASTER_ATTRACT_MENU_TIMEOUT)) {
+      master_attract_timeout = millis();  // new timeout for running game
+
+      // randomly select a machine
+      machine = 1 + ((unsigned long)esp_random()) % MACHINES;
+      printf("MASTER ATTRACT to machine %d!!!\n", machine);
+      
+#ifdef ENABLE_DKONG
+      // dkong uses a different sample rate, so reconfigure audio if
+      // kong is requested
+      audio_dkong_bitrate(machine == MCH_DKONG);
+#endif
+    }
+#endif
   } 
   else
 #endif  
@@ -685,4 +747,12 @@ void emulate_frame(void) {
     vTaskDelay(1);
 
   // printf("us/f: %d\n", sof);
+  
+#ifdef MASTER_ATTRACT_GAME_TIMEOUT
+  if((machine != MCH_MENU) && master_attract_timeout && (millis() - master_attract_timeout > MASTER_ATTRACT_GAME_TIMEOUT)) {
+    printf("MASTER ATTRACT game timeout, return to menu\n");
+    master_attract_timeout = millis();
+    emulation_reset();
+  }
+#endif  
 }
