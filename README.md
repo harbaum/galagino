@@ -4,7 +4,7 @@ Galaga, Pac-Man and Donkey Kong for the ESP32
 
 ## Arcade emulator for ESP32
 
-![Cabinet](hardware/cabinet/assembled.jpg)
+![Cabinet](images/galagino_cabinet.jpg)
 
 ![Pac-Man screenshot](images/pacman.gif)
 ![Galaga screencast](images/galagino.gif)
