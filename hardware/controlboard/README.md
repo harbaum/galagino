@@ -6,9 +6,9 @@ use with galagino. It consists of four 3d printed parts.
 Additionally needed:
 
 - Six screws M2x12mm
-- One screw M2x20mm
+- One screw M2x16mm
 - Six M2 nuts
-- Two M2 washer
+- Two M2 washers
 - Four 6x6mm push buttons, through hole, height 4.3mm
 - Two 6x6mm push buttons, through hole, height 9mm
 

@@ -1,6 +1,19 @@
 # Cabinet
 
-The cabinet is built from 15 lasercut 3mm plywood parts.
+The cabinet is built from 15 lasercut 3mm plywood parts and is designed to
+house common off-the-shelf electronic components. The exact components are
+listed below. 
+
+* [38 pin ESP32 Devkit V4](https://www.espressif.com/en/products/devkits/esp32-devkitc)
+* 2.8 inch 320x240 ILI9341 display
+* [PAM8302A](https://www.adafruit.com/product/2130) amplifier
+* cased 3W / 8 ohms speaker as seen in the photos below
+* assembled [control board](../controlboard)
+* [coin button](../coinbutton)
+* four M2 x 8mm screws with matching nuts
+* some wires, solder, ...
+
+The cabinet may have to be modified If different parts are being used.
 
 ![The assembled cabinet](assembled.jpg)
 
