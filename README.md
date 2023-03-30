@@ -58,7 +58,7 @@ The hardware is built around one of those cheap ESP32 development
 boards like the ESP32 Devkit V4 depicted in the images below. The
 components needed for the breadboard setup are listed below. If you
 plan to build the [cabinet](hardware/cabinet) instead you might want
-to make sure you [order the exact parts](./hardware) to make sure they
+to make sure you [order the exact parts](./hardware) that
 aren't only electrically compatible but also mechanically.
 
 * ESP32 development board (e.g. [Devkit V4](https://www.espressif.com/en/products/devkits/esp32-devkitc))
