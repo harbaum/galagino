@@ -126,7 +126,9 @@ Arduino IDE must have the [ESP32 board support](https://docs.espressif.com/proje
 installed and the appropriate board like e.g. the
 *ESP32 Dev Module* should be selected. Finally the default core used
 by Arduino should be 1 (this is the default) as Galagino will use core 0
-for audio and video emulation.
+for audio and video emulation. Furthermore the FastLED library should
+be installed to support the LEDs in the [cabinets marquee](./hardware/cabinet).
+LED support can be disabled in the configuration if no LEDs are going to be installed.
 
 ## Configuration
 
@@ -134,7 +136,8 @@ The Galagino code can be configured through the [galagino/config.h](galagino/con
 file. This is also the place where it's possible to choose between the ILI9341
 controller (default) and the ST7789.
 
-Also the pin assignment can be adjusted as well as the TFT SPI clock.
+Also the pin assignment can be adjusted as well as the TFT SPI clock or the
+use of LEDs for the marquee.
 
 ## Improvements
 
