@@ -33,6 +33,6 @@ This is a list of all parts required to build a complete Galagino
 ## Mechanical parts
 
 * [15 lasercut plywood parts](./cabinet)
-* [3D printed black coin button holder](./coinbutton)
+* [3D printed coin button holder](./coinbutton)
 * [3D printed black control board](./controlboard)
 * [3D printed transparent marquee](./marquee)
