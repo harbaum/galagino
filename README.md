@@ -1,8 +1,8 @@
-# Galagino
+# Galagino - Arcade emulator for ESP32
 
 Galaga, Pac-Man and Donkey Kong for the ESP32
 
-## Arcade emulator for ESP32
+
 
 ![Cabinet](images/galagino_cabinet.jpg)
 
