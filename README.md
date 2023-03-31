@@ -51,6 +51,7 @@ SPI clock, Galagino will run at full 60Hz refresh.
 * [Donkey Kong on Galagino](https://www.youtube.com/shorts/KROFJ0Rtj0w)
 * [Boot menu](https://www.youtube.com/shorts/_PJyn06yrtg)
 * [Cardboard cabinet](https://youtube.com/shorts/vverV4NphlQ)
+* [Finished plywood cabinet](https://youtube.com/shorts/a3-wctRAIds)
 
 ## Hardware
 
