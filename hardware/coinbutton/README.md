@@ -12,4 +12,4 @@ Additionally needed:
 
 The coinbutton is screwed to part 6 of the [cabinet](../cabinet).
 
-![Photo](coinbutton.png)
+![Photo](coinbutton.jpg)
