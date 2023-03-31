@@ -31,9 +31,11 @@ Also available as [PDF](schema.pdf)
 The following files can be used with most laser cutters. All parts fit
 onto one single A4 sized piece of 3mm thick plywood.
 
-![Lasercut Parts](lasercut_parts.png)
+![Lasercut Parts CAD](lasercut_parts.png)
 
 Also available as [SVG](lasercut_parts.svg) and [PDF](lasercut_parts.pdf)
+
+![Lasercut Parts](parts.jpg)
 
 Once the electronics are [assembled and tested](../assembly) they are
 mounted to their plywood parts.
