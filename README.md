@@ -13,7 +13,7 @@ Play Galaga, Pac-Man and Donkey Kong on the ESP32
 [Pac-Man](https://en.wikipedia.org/wiki/Pac-Man),
 [Galaga](https://en.wikipedia.org/wiki/Galaga) and
 [Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(video_game)) are three of the most
-iconic arcade machines of all times and are listed on place #1 to #3
+iconic arcade machines of all times and are listed on places #1 to #3
 on the [Killer List of Video Games](http://www.klov.net).
 
 Especially Pac-Man and Galaga have been remade and emulated many
@@ -24,10 +24,12 @@ from the early ’80s, shouldn't it?
 
 Well, things are not that easy. The Galaga arcade was driven by three
 Z80 CPUs, each running at 3Mhz. Additionally the arcade machine
-included two more CPUs for button and coin handling and for audio
+included two more CPUs, one for button and coin handling and one for audio
 support. And finally the hardware itself had dedicated support
 for simple wavetable audio, tilemap graphics and up to 64 sprites.
-The video resultion was 224 by 288 pixels. The ESP32 on the other hand
+The video resultion was 224 by 288 pixels.
+
+The ESP32 on the other hand
 comes with two cores running at 240MHz. But it lacks dedicated video
 hardware. Emulating the various CPUs as well as the handling of
 audio and graphics turned out to be challenging for the ESP32.
@@ -44,13 +46,13 @@ SPI clock, Galagino will run at full 60Hz refresh.
 
 ## Youtube videos
 
-* [First test](https://www.youtube.com/shorts/LZRI6izM8XM)
+* [First Galaga Emulation test ](https://www.youtube.com/shorts/LZRI6izM8XM)
 * [Sound and Starfield working](https://www.youtube.com/shorts/8uNSv0aRtgY)
-* [Finally playable](https://www.youtube.com/shorts/wqnJzOAAths)
+* [Galaga is finally playable](https://www.youtube.com/shorts/wqnJzOAAths)
 * [Pac-Man on Galagino](https://www.youtube.com/shorts/F4-XiiPwG1c)
 * [Donkey Kong on Galagino](https://www.youtube.com/shorts/KROFJ0Rtj0w)
 * [Boot menu](https://www.youtube.com/shorts/_PJyn06yrtg)
-* [Cardboard cabinet](https://youtube.com/shorts/vverV4NphlQ)
+* [Cardboard cabinet prototype](https://youtube.com/shorts/vverV4NphlQ)
 * [Finished plywood cabinet](https://youtube.com/shorts/a3-wctRAIds)
 
 ## Hardware
