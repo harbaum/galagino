@@ -89,9 +89,9 @@ mappings.
 ![Breadboard photo](images/galagino_breadboard.jpeg)
 
 This setup with five buttons works fine for Galaga since there is no
-vertical movement in the game that requires a joystick. A joystick may
-be needed for other games like Pac-Man and Donkey Kong. The setup would
-the be wired in the following way:
+vertical movement in the game that requires a joystick. A joystick is
+needed for Pac-Man and Donkey Kong. The joystick based setup would
+then be wired in the following way:
 
 ![Breadboard scheme with 5 way joystick](images/galagino_5way_bb.png)
 
