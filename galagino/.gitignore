@@ -6,10 +6,11 @@ CodesXX.h
 Tables.h
 Z80.c
 Z80.h
-tileaddr.h
-dkong_*.h
-pacman_*.h
-galaga_*.h
+*_tilemap.h
+*_rom*.h
+*_spritemap.h
+*_cmap*.h
+*_wavetable.h
 debug.cfg
 debug_custom.json
 esp32.svd
