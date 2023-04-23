@@ -22,8 +22,16 @@ to be used with a small laser cut cabinet.
 
 ## Wiring
 
-The wiring of the controlboard is a little delicate. It starts
-with a GND wire connecting one pin of a buttons.
+The colors and order of the wires in the following schema matches the
+colors and order of the wires in the [assembly instructions](../assembly).
+
+![Wiring](wiring.png)
+
+The wiring of the controlboard is a little bit delicate. It starts
+with a GND wire connecting one pin of each button. The wires may
+protrude to the bottom as this will be inside the final cabinet. But
+they must not protrude to the top as this will be the front face which
+is convered by a plywood part which won't leave any space for cables.
 
 ![GND wire](controlboard_gndwire.jpg)
 
