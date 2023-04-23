@@ -39,3 +39,14 @@ Once all ground connections are done, a seven wire ribbon cable is
 connected to all buttons and to the GND wire:
 
 ![wires](controlboard_wires.jpg)
+
+## Assembly
+
+Assembly starts with the buttons being attached to the base plate and
+being soldered to the wires. The limiter and actuator are assembled
+with the M2x16mm screw and one M2 washer.
+
+![Assembly](assembly.png)
+
+Both parts are then connected using six M2x12mm screws and nuts. And
+finally the knob is attached with another M2 washer.
