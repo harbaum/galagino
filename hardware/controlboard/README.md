@@ -19,3 +19,15 @@ of a 2.8 inch TFT display. The control board has two 3x10mm flanges
 to be used with a small laser cut cabinet.
 
 ![Photo](controlboard.jpg)
+
+## Wiring
+
+The wiring of the controlboard is a little delicate. It starts
+with a GND wire connecting one pin of a buttons.
+
+![GND wire](controlboard_gndwire.jpg)
+
+Once all ground connections are done, a seven wire ribbon cable is
+connected to all buttons and to the GND wire:
+
+![wires](controlboard_wires.jpg)
