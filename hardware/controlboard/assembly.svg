@@ -27,9 +27,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.20850623"
-     inkscape:cx="525.16418"
-     inkscape:cy="1021.5522"
+     inkscape:zoom="0.41701246"
+     inkscape:cx="670.24376"
+     inkscape:cy="316.5373"
      inkscape:window-width="1280"
      inkscape:window-height="965"
      inkscape:window-x="0"
@@ -1502,7 +1502,12 @@
          id="tspan16215-4-6"
          style="font-size:9.87778px;stroke-width:1.08873"
          x="161.62688"
-         y="36.923382">M2 x 12mm</tspan></text>
+         y="36.923382">M2 x 12mm</tspan><tspan
+         sodipodi:role="line"
+         style="font-size:9.87778px;stroke-width:1.08873"
+         x="161.62688"
+         y="49.270607"
+         id="tspan2136">(6x)</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 38.237059,143.45429 13.726936,4.7632"
@@ -1527,6 +1532,11 @@
        style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 246.12945,51.265165 14.44883,-5.284166"
        id="path35099-7-4-0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 133.90153,47.779522 14.44883,-5.284166"
+       id="path35099-7-4-0-3"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.865;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
