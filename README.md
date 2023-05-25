@@ -54,6 +54,7 @@ SPI clock, Galagino will run at full 60Hz refresh.
 * [Boot menu](https://www.youtube.com/shorts/_PJyn06yrtg)
 * [Cardboard cabinet prototype](https://youtube.com/shorts/vverV4NphlQ)
 * [Finished plywood cabinet](https://youtube.com/shorts/a3-wctRAIds)
+* [John Bradnam's 3D printed case](https://www.youtube.com/watch?v=p29Yvht4jSI)
 
 ## Hardware
 

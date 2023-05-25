@@ -1,7 +1,11 @@
 # Galagino cabinet
 
 This is a list of all parts required to build a complete Galagino
-[cabinet](./cabinet). Further instructions are linked below.
+[cabinet from plywood](./cabinet). Further instructions are linked below.
+
+If you don't have access to a laser cutter or prefer a fully 3d
+printed case then you should have a look at [John Bradnam's great
+Galagino case](https://www.hackster.io/john-bradnam/galagino-esp32-arcade-355dde).
 
 ## Electric and electronic parts
 
