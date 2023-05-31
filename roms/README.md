@@ -3,9 +3,9 @@
 This directory contains ROM files and other data required to build
 galagino. The *Galaga Namco Rev. B* romset contains the orignal rom
 files from the galaga arcade. These files are also needed for
-emulators like MAME and can easily be found online. If Pac-Man
-and/or Donkey Kong are to be included as well, then their ROM files
-are also needed.
+emulators like MAME and can easily be found online. If Pac-Man and/or
+Donkey Kong and Frogger are to be included as well, then their ROM
+files are also needed.
 
 Once all files have been placed here, the conversion scripts
 in the [romconv directory](../romconv) can be used to convert
