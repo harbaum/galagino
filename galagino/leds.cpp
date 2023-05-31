@@ -79,7 +79,10 @@ void leds_update(void) {
       { LED_RED, LED_BLUE, LED_WHITE, LED_WHITE, LED_WHITE, LED_BLUE, LED_RED },
 #endif
 #ifdef ENABLE_DKONG      
-      { LED_BLACK, LED_YELLOW, LED_RED, LED_RED, LED_RED, LED_YELLOW, LED_BLACK }
+      { LED_BLACK, LED_YELLOW, LED_RED, LED_RED, LED_RED, LED_YELLOW, LED_BLACK },
+#endif
+#ifdef ENABLE_FROGGER
+      { LED_RED, LED_GREEN, LED_YELLOW, LED_YELLOW, LED_YELLOW, LED_GREEN, LED_RED },
 #endif
     };
     memcpy(leds, menu_leds+menu_sel-1, NUM_LEDS*sizeof(CRGB));
@@ -87,9 +90,7 @@ void leds_update(void) {
 #endif  
 
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN) 
-#endif  
+PACMAN_BEGIN
   {
     // pacman: yellow on blue "knight rider" ...
     static char sub_cnt = 0;
@@ -107,15 +108,11 @@ void leds_update(void) {
       led = (led + 1) % (2*NUM_LEDS-2);      
     }    
   }
-#ifndef SINGLE_MACHINE
-  else
-#endif
+PACMAN_END
 #endif
 
 #ifdef ENABLE_GALAGA  
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_GALAGA) 
-#endif  
+GALAGA_BEGIN
   {
     // led_state:
     // 0:      idle
@@ -140,12 +137,11 @@ void leds_update(void) {
     };
     memcpy(leds, galaga_leds+led_state, NUM_LEDS*sizeof(CRGB));
   } 
-#ifdef ENABLE_DKONG
-  else
-#endif
+GALAGA_END
 #endif  
 
 #ifdef ENABLE_DKONG
+DKONG_BEGIN
   {    
     // dkong: red "knight rider" ...
     static char sub_cnt = 0;
@@ -163,8 +159,31 @@ void leds_update(void) {
       led = (led + 1) % (2*NUM_LEDS-2);      
     }
   }
+DKONG_END
 #endif
-  
+
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+  {
+    // frogger: slow yellow on green "knight rider" ...
+    static char sub_cnt = 0;
+    if(sub_cnt++ == 32) {
+      sub_cnt = 0;
+      
+      // and also do the marquee LEDs
+      static char led = 0;
+      
+      char il = (led<NUM_LEDS)?led:((2*NUM_LEDS-2)-led);
+      for(char c=0;c<NUM_LEDS;c++) {
+        if(c == il) leds[c] = LED_YELLOW;
+        else        leds[c] = LED_GREEN;
+      }
+      led = (led + 1) % (2*NUM_LEDS-2);      
+    }    
+  }
+FROGGER_END
+#endif
+
   FastLED.show();
 }
    

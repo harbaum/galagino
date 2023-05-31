@@ -19,7 +19,7 @@
 
 // include converted rom data
 #ifdef ENABLE_PACMAN
-#ifndef NO_MENU
+#ifndef SINGLE_MACHINE
 #include "pacman_logo.h"
 #endif
 #include "pacman_tilemap.h"
@@ -29,7 +29,7 @@
 #endif
 
 #ifdef ENABLE_GALAGA
-#ifndef NO_MENU
+#ifndef SINGLE_MACHINE
 #include "galaga_logo.h"
 #endif
 #include "galaga_spritemap.h"
@@ -42,7 +42,7 @@
 #endif
 
 #ifdef ENABLE_DKONG
-#ifndef NO_MENU
+#ifndef SINGLE_MACHINE
 #include "dkong_logo.h"
 #endif
 #include "dkong_tilemap.h"
@@ -54,6 +54,15 @@
 #include "dkong_sample_walk2.h"
 #include "dkong_sample_jump.h"
 #include "dkong_sample_stomp.h"
+#endif
+
+#ifdef ENABLE_FROGGER
+#ifndef SINGLE_MACHINE
+#include "frogger_logo.h"
+#endif
+#include "frogger_tilemap.h"
+#include "frogger_spritemap.h"
+#include "frogger_cmap.h"
 #endif
 
 #ifndef SINGLE_MACHINE
@@ -85,6 +94,14 @@ const signed char *snd_boom_ptr = NULL;
 #ifdef ENABLE_DKONG
 unsigned short dkong_sample_cnt[3] = { 0,0,0 };
 const signed char *dkong_sample_ptr[3];
+#endif
+
+#ifdef ENABLE_FROGGER
+int ay_period[3] = {0,0,0};
+int ay_volume[3] = {0,0,0};
+int ay_enable[3] = {0,0,0};
+int audio_cnt[3], audio_toggle[3] = {1,1,1};
+extern unsigned char soundregs[];
 #endif
 
 // one method to return to the main menu is to reset
@@ -141,7 +158,6 @@ void galaga_prepare_frame(void) {
       spr.code = sprite_base_ptr[0x0b80];
       spr.color = sprite_base_ptr[0x0b80 + 1];
       spr.flags = sprite_base_ptr[0x1b80];
-      // adjust sprite position on screen for upright screen
       spr.x = sprite_base_ptr[0x1380] - 16;
       spr.y = sprite_base_ptr[0x1380 + 1] +
 	      0x100*(sprite_base_ptr[0x1b80 + 1] & 1) - 40;
@@ -224,6 +240,31 @@ void dkong_prepare_frame(void) {
 }
 #endif
 
+#ifdef ENABLE_FROGGER
+void frogger_prepare_frame(void) {
+  active_sprites = 0;
+  // frogger supports a total of 8 sprites of 8x8 size
+  for(int idx=7;idx>=0 && active_sprites < 92;idx--) {
+    // sprites are stored at 0x0c40
+    unsigned char *sprite_base_ptr = memory + 0xc40 + 4*idx;
+    struct sprite_S spr;     
+
+    if(sprite_base_ptr[3]) {
+      spr.x = sprite_base_ptr[0];
+      spr.x = (((spr.x << 4) & 0xf0) | ((spr.x >> 4) & 0x0f)) - 16;
+      spr.y = sprite_base_ptr[3] + 16;
+      spr.color = sprite_base_ptr[2] & 7;
+      spr.color = ((spr.color >> 1) & 0x03) | ((spr.color << 2) & 0x04);
+      spr.code = sprite_base_ptr[1] & 0x3f;
+      spr.flags =  ((sprite_base_ptr[1] & 0x80)?1:0) | ((sprite_base_ptr[1] & 0x80)?2:0);
+
+      if((spr.y > -16) && (spr.y < 288) && (spr.x > -16) && (spr.x < 224))
+      	sprite[active_sprites++] = spr;
+    }    
+  }
+}
+#endif
+
 #ifdef ENABLE_GALAGA
 void render_stars_set(short row, const struct galaga_star *set) {    
   for(char star_cntr = 0;star_cntr < 63 ;star_cntr++) {
@@ -244,35 +285,27 @@ void blit_tile(short row, char col) {
   const unsigned short *tile, *colors;
 
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN)   
-#endif
+PACMAN_BEGIN
   {
     tile = pacman_5e[memory[addr]];
     colors = pacman_colormap[memory[0x400 + addr] & 63];
   } 
-  
-#ifndef SINGLE_MACHINE
-  else // there's at least a second machine enabled
-#endif
+PACMAN_END  
 #endif
   
 #ifdef ENABLE_GALAGA
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_GALAGA) 
-#endif  
+GALAGA_BEGIN
   {
     // skip blank galaga tiles (0x24) in rendering  
     if(memory[addr] == 0x24) return;
     tile = gg1_9_4l[memory[addr]];
     colors = galaga_colormap_tiles[memory[0x400 + addr] & 63];  
   } 
-#ifdef ENABLE_DKONG  
-  else
-#endif
+GALAGA_END  
 #endif
 
 #ifdef ENABLE_DKONG
+DKONG_BEGIN
   {
     /* if(machine == MCH_DKONG) */
     if((row < 2) || (row >= 34)) return;    
@@ -282,8 +315,24 @@ void blit_tile(short row, char col) {
     // donkey kong has some sort of global color table
     colors = dkong_colormap[colortable_select][row-2 + 32*(col/4)];
   }
+DKONG_END
 #endif
-      
+
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+  {
+    if((row < 2) || (row >= 34))
+      return;
+
+    tile = frogger_606[memory[0x0800 + addr]];
+
+    // frogger has a very reduced color handling
+    int c = memory[0xc00 + 2 * (addr & 31) + 1] & 7;
+    colors = frogger_colormap[((c >> 1) & 0x03) | ((c << 2) & 0x04)];
+  }
+FROGGER_END
+#endif
+
   unsigned short *ptr = frame_buffer + 8*col;
 
   // 8 pixel rows per tile
@@ -297,6 +346,54 @@ void blit_tile(short row, char col) {
   }
 }
 
+#ifdef ENABLE_FROGGER
+// frogger can scroll single lines
+void blit_tile_scroll(short row, signed char col, short scroll) {
+  if((row < 2) || (row >= 34))
+    return;
+
+  unsigned short addr;
+  unsigned short mask = 0xffff;
+  int sub = scroll & 0x07;
+  if(col >= 0) {
+    addr = tileaddr[row][col];
+
+    // one tile (8 pixels) further is an address offset of 32
+    addr = (addr + ((scroll & ~7) << 2)) & 1023;
+
+    if((sub != 0) && (col == 27))
+      mask = 0xffff >> (2*sub);    
+  } else {
+    // negative column is a special case for the leftmost
+    // tile when it's only partly visible
+    addr = tileaddr[row][0];
+    addr = (addr + 32 + ((scroll & ~7) << 2)) & 1023;
+
+    mask = 0xffff << (2*(8-sub));
+  }
+    
+  const unsigned char chr = memory[0x0800 + addr];
+  const unsigned short *tile = frogger_606[chr];
+
+  // frogger has a very reduced color handling
+  int c = memory[0xc00 + 2 * (addr & 31) + 1] & 7;
+  const unsigned short *colors =
+    frogger_colormap[((c >> 1) & 0x03) | ((c << 2) & 0x04)];
+
+  unsigned short *ptr = frame_buffer + 8*col + sub;
+
+  // 8 pixel rows per tile
+  for(char r=0;r<8;r++,ptr+=(224-8)) {
+    unsigned short pix = *tile++ & mask;
+    // 8 pixel columns per tile
+    for(char c=0;c<8;c++,pix>>=2) {      
+      if(pix & 3) *ptr = colors[pix&3];
+      ptr++;      
+    }
+  }
+}
+#endif
+
 #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
 // render a single 16x16 sprite. This is called multiple times for
 // double sized sprites. This renders onto a single 224 x 8 tile row
@@ -306,23 +403,22 @@ void blit_sprite(short row, unsigned char s) {
   const unsigned short *colors;
 
 #ifdef ENABLE_PACMAN
-#ifdef ENABLE_GALAGA
-  if(machine == MCH_PACMAN) {
-#endif    
+PACMAN_BEGIN
+  {
     spr = pacman_sprites[sprite[s].flags & 3][sprite[s].code];
     colors = pacman_colormap[sprite[s].color & 63];
-#ifdef ENABLE_GALAGA
-  } else
-#endif
+  }
+PACMAN_END
 #endif
 
 #ifdef ENABLE_GALAGA
-  /* if(machine == MCH_GALAGA) */ 
+GALAGA_BEGIN
   {
     spr = galaga_sprites[sprite[s].flags & 3][sprite[s].code];
     colors = galaga_colormap_sprites[sprite[s].color & 63];
     if(colors[0] != 0) return;   // not a valid colormap entry
   }
+GALAGA_END
 #endif
 
   // create mask for sprites that clip left or right
@@ -411,6 +507,49 @@ void blit_sprite_dkong(short row, unsigned char s) {
 }
 #endif
 
+#ifdef ENABLE_FROGGER
+void blit_sprite_frogger(short row, unsigned char s) {
+  const unsigned long *spr = frogger_sprites[sprite[s].flags & 3][sprite[s].code];
+  const unsigned short *colors = frogger_colormap[sprite[s].color];
+  
+  // create mask for sprites that clip left or right
+  unsigned long mask = 0xffffffff;
+  if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
+  if(sprite[s].x > 224-16) mask >>= 2*(sprite[s].x-224-16);		
+
+  short y_offset = sprite[s].y - 8*row;
+
+  // check if there are less than 8 lines to be drawn in this row
+  unsigned char lines2draw = 8;
+  if(y_offset < -8) lines2draw = 16+y_offset;
+
+  // check which sprite line to begin with
+  unsigned short startline = 0;
+  if(y_offset > 0) {
+    startline = y_offset;
+    lines2draw = 8 - y_offset;
+  }
+
+  // if we are not starting to draw with the first line, then
+  // skip into the sprite image
+  if(y_offset < 0) spr -= y_offset;  
+
+  // calculate pixel lines to paint  
+  unsigned short *ptr = frame_buffer + sprite[s].x + 224*startline;
+  
+  // 16 pixel rows per sprite
+  for(char r=0;r<lines2draw;r++,ptr+=(224-16)) {
+    unsigned long pix = *spr++ & mask;
+    // 16 pixel columns per tile
+    for(char c=0;c<16;c++,pix>>=2) {
+      unsigned short col = colors[pix&3];
+      if(pix & 3) *ptr = col;
+      ptr++;
+    }
+  }
+}
+#endif
+
 #ifndef SINGLE_MACHINE
 // convert rgb565 big endian color to greyscale
 unsigned short greyscale(unsigned short in) {
@@ -426,38 +565,48 @@ unsigned short greyscale(unsigned short in) {
 }
 
 // render one of three the menu logos. Only the active one is colorful
+// render logo into current buffer starting with line "row" of the logo
 void render_logo(short row, const unsigned short *logo, char active) {
   unsigned short marker = logo[0];
   const unsigned short *data = logo+1;
 
-  // skip ahead to row
-  unsigned short col = 0;
-  unsigned short pix = 0;
-  while(pix < 224*8*row) {
-    if(data[0] != marker) {
-      pix++;
-      data++;
-    } else {
-      pix += data[1]+1;
-      col = data[2];
-      data += 3;
-    }
-  }
-   
-  // draw pixels remaining from previous run
+  // current pixel to be drawn
   unsigned short ipix = 0;
-  if(!active) col = greyscale(col);  
-  while(ipix < ((pix-224*8*row < 224*8)?(pix-224*8*row):(224*8)))
-    frame_buffer[ipix++] = col;
-
-  while(ipix < 224*8) {
+    
+  // less than 8 rows in image left?
+  unsigned short pix2draw = ((row <= 96-8)?(224*8):((96-row)*224));
+  
+  if(row >= 0) {
+    // skip ahead to row
+    unsigned short col = 0;
+    unsigned short pix = 0;
+    while(pix < 224*row) {
+      if(data[0] != marker) {
+        pix++;
+        data++;
+      } else {
+        pix += data[1]+1;
+        col = data[2];
+        data += 3;
+      }
+    }
+    
+    // draw pixels remaining from previous run
+    if(!active) col = greyscale(col);
+    while(ipix < ((pix - 224*row < pix2draw)?(pix - 224*row):pix2draw))
+      frame_buffer[ipix++] = col;
+  } else
+    // if row is negative, then skip target pixel
+    ipix -= row * 224;
+    
+  while(ipix < pix2draw) {
     if(data[0] != marker)
       frame_buffer[ipix++] = active?*data++:greyscale(*data++);
     else {
       unsigned short color = data[2];
       if(!active) color = greyscale(color);
-      for(unsigned short j=0;j<data[1]+1 && ipix < 224*8;j++)
-      	frame_buffer[ipix++] = color;
+      for(unsigned short j=0;j<data[1]+1 && ipix < pix2draw;j++)
+        frame_buffer[ipix++] = color;
 
       data += 3;
     }
@@ -466,52 +615,88 @@ void render_logo(short row, const unsigned short *logo, char active) {
 #endif
 
 #ifndef SINGLE_MACHINE
-#if defined(ENABLE_PACMAN) && defined(ENABLE_GALAGA) && defined(ENABLE_DKONG)
-// all three enabled
-#define PACMAN_LOGO_Y   0   // to 11
-#define GALAGA_LOGO_Y  12   // to 23
-#define DKONG_LOGO_Y   24   // to 35
-#elif defined(ENABLE_PACMAN)
-// two enabled and one of it is pacman
-#define PACMAN_LOGO_Y   6   // to 14
+// menu for more than three machines
+const unsigned short *logos[] = {
+#ifdef ENABLE_PACMAN    
+  pacman_logo,
+#endif
 #ifdef ENABLE_GALAGA
-#define GALAGA_LOGO_Y  18
-#else
-#define DKONG_LOGO_Y   18
+  galaga_logo,
 #endif
-#else
-// only galaga and dkong
-#define GALAGA_LOGO_Y   6
-#define DKONG_LOGO_Y   18
+#ifdef ENABLE_DKONG    
+  dkong_logo,
 #endif
+#ifdef ENABLE_FROGGER    
+  frogger_logo,
+#endif
+};
 #endif
 
 // render one of 36 tile rows (8 x 224 pixel lines)
 void render_line(short row) {
-  // clear buffer for black background  
-  memset(frame_buffer, 0, 2*224*8);
+  // the upper screen half of frogger has a blue background
+  // using 8 in fact adds a tiny fraction of red as well. But that does not hurt
+  memset(frame_buffer, 
+#ifdef ENABLE_FROGGER 
+    (MACHINE_IS_FROGGER && row <= 17)?8:
+#endif
+    0, 2*224*8);
 
 #ifndef SINGLE_MACHINE
   if(machine == MCH_MENU) {
-#ifdef ENABLE_PACMAN
-    if(row < PACMAN_LOGO_Y+12)  
-      render_logo(row-PACMAN_LOGO_Y,    pacman_logo, menu_sel == MCH_PACMAN);
-#endif
-#ifdef ENABLE_GALAGA
-    if(row >= GALAGA_LOGO_Y && row < GALAGA_LOGO_Y+12)  
-      render_logo(row-GALAGA_LOGO_Y, galaga_logo, menu_sel == MCH_GALAGA);
-#endif
-#ifdef ENABLE_DKONG
-    if(row >= DKONG_LOGO_Y && row < DKONG_LOGO_Y+12)  
-      render_logo(row-DKONG_LOGO_Y,  dkong_logo, menu_sel == MCH_DKONG);
+
+#ifndef MENU_SCROLL
+    // non-scrolling menu for 2 or 3 machines
+    for(char i=0;i<sizeof(logos)/sizeof(unsigned short*);i++) {
+      char offset = i*12;
+      if(sizeof(logos)/sizeof(unsigned short*) == 2) offset += 6;
+      
+      if(row >= offset && row < offset+12)  
+        render_logo(8*(row-offset), logos[i], menu_sel == i+1);
+    }
+#else // MENU_SCROLL
+    // scrolling menu for more than 3 machines
+    
+    // valid offset values range from 0 to MACHINE*96-1
+    static int offset = 0;
+
+    // check which logo would show up in this row. Actually
+    // two may show up in the same character row when scrolling
+    int logo_idx = ((row + offset/8) / 12)%MACHINES;
+    if(logo_idx < 0) logo_idx += MACHINES;
+    
+    int logo_y = (row * 8 + offset)%96;  // logo line in this row
+
+    // check if logo at logo_y shows up in current row
+    render_logo(logo_y, logos[logo_idx], (menu_sel-1) == logo_idx);
+
+    // check if a second logo may show up here
+    if(logo_y > (96-8)) {
+        logo_idx = (logo_idx + 1)%MACHINES;
+        logo_y -= 96;
+        render_logo(logo_y, logos[logo_idx], (menu_sel-1) == logo_idx);
+    }
+    
+    if(row == 35) {
+      // finally offset is bound to game, something like 96*game:    
+      int new_offset = 96*((unsigned)(menu_sel-2)%MACHINES);
+
+      // check if we need to scroll
+      if(new_offset != offset) {
+        int diff = (new_offset - offset) % (MACHINES*96);
+        if(diff < 0) diff += MACHINES*96;
+  
+        if(diff < MACHINES*96/2) offset = (offset+8)%(MACHINES*96);
+        else                     offset = (offset-8)%(MACHINES*96);
+        if(offset < 0) offset += MACHINES*96;
+      }
+    }  
 #endif
   } else
 #endif  
 
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN)
-#endif
+PACMAN_BEGIN
   {
     // render 28 tile columns per row
     for(char col=0;col<28;col++)
@@ -524,15 +709,11 @@ void render_line(short row) {
         blit_sprite(row, s);
     }
   }
-#ifndef SINGLE_MACHINE
-  else
-#endif
+PACMAN_END
 #endif
   
 #ifdef ENABLE_GALAGA
-#ifdef ENABLE_DKONG
-  if(machine == MCH_GALAGA)
-#endif
+GALAGA_BEGIN
   {
     if(starcontrol & 0x20) {
       /* two sets of stars controlled by these bits */
@@ -551,12 +732,11 @@ void render_line(short row) {
     for(char col=0;col<28;col++)
       blit_tile(row, col);
   } 
-#ifdef ENABLE_DKONG
-  else /* if(machine == MCH__DKONG) */
-#endif
+GALAGA_END
 #endif
 
 #ifdef ENABLE_DKONG
+DKONG_BEGIN
   {
     // render 28 tile columns per row
     for(char col=0;col<28;col++)
@@ -569,6 +749,46 @@ void render_line(short row) {
         blit_sprite_dkong(row, s);
     }
   }
+DKONG_END
+#endif
+
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+  {
+    // don't render lines 0, 1, 34 and 35
+    if(row <= 1 || row >= 34) return;
+
+    // get scroll info for this row
+    unsigned char scroll = memory[0xc00 + 2 * (row - 2)];
+    scroll = ((scroll << 4) & 0xf0) | ((scroll >> 4) & 0x0f);
+
+    // in frogger scroll will only affect rows
+    // water:  8/ 9, 10/11, 12/13, 14/15, 16/17
+    // road:  20/21, 22/23, 24/25, 26/27, 28/29
+
+    // render 28 tile columns per row. Handle frogger specific
+    // scroll capabilities
+    if(scroll == 0) // no scroll in this line?
+      for(char col=0;col<28;col++)
+    	  blit_tile(row, col);
+    else {
+      // if scroll offset is multiple of 8, then
+      // 28 tiles are sufficient, otherwise the first
+      // fragment needs to be drawn
+      if(scroll & 7) 
+      	blit_tile_scroll(row, -1, scroll);
+
+      for(char col=0;col<28;col++)
+	      blit_tile_scroll(row, col, scroll);
+    }
+    // render sprites
+    for(unsigned char s=0;s<active_sprites;s++) {
+      // check if sprite is visible on this row
+      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
+	      blit_sprite_frogger(row, s);
+    }
+  }
+FROGGER_END
 #endif
 }
 
@@ -595,17 +815,33 @@ static unsigned short snd_buffer[64];  // buffer space for a single channel
 #endif
 
 void snd_render_buffer(void) {
-#ifdef ENABLE_DKONG
-  #ifndef SINGLE_MACHINE
-  if(machine == MCH_DKONG)
-  #endif
+#ifdef ENABLE_FROGGER
+#ifndef SINGLE_MACHINE
+  if(machine == MCH_FROGGER)
+#endif
   {
-    // audio buffer should be full by now
-    if(dkong_audio_rptr == dkong_audio_wptr)
-      printf("DK audio underrun\n");
+    // check if soundregisters have changed
+    char same = 1;
+    for(char i=0;i<14;i++)
+      if(soundregs[i] != soundregs[16+i])
+      	same = 0;
+
+    if(!same) {
+      // recalc audio state
+      for(char c=0;c<3;c++) {	
+      	ay_period[c] = soundregs[2*c] + 256 * (soundregs[2*c+1] & 15);
+	      ay_enable[c] = !(soundregs[7] & (1<<c));
+      	ay_volume[c] = soundregs[8+c] & 0x0f;
+
+        // printf("AY %d %d\n", c, ay_period[c]);
+      }
+
+      for(char i=0;i<14;i++)
+	      soundregs[16+i] = soundregs[i];
+    }
   }
 #endif
-  
+
   // render first buffer contents
   for(int i=0;i<64;i++) {
     short v = 0;
@@ -638,9 +874,7 @@ void snd_render_buffer(void) {
 #endif    
 
 #ifdef ENABLE_DKONG
-#ifndef SINGLE_MACHINE
-    else   
-#endif
+DKONG_BEGIN
     {
       v = 0;  // silence
 
@@ -659,8 +893,28 @@ void snd_render_buffer(void) {
         }
       }
     }
+DKONG_END
 #endif
-    
+
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+    {
+      v = 0;  // silence
+
+      for(char c=0;c<3;c++) {      
+	      // a channel is on if period != 0, vol != 0 and tone bit == 0
+	      if(ay_period[c] && ay_volume[c] && ay_enable[c]) {
+	        v += 11 * audio_toggle[c] * ay_volume[c];  // min/max = -/+ 45*11 = -/+ 495
+	        audio_cnt[c] += 9; // for 24 khz
+	        if(audio_cnt[c] > ay_period[c]) {
+	          audio_cnt[c] -= ay_period[c];
+	          audio_toggle[c] = -audio_toggle[c];
+	        }
+        }
+      }
+    }
+FROGGER_END
+#endif
     // v is now in the range of +/- 512, so expand to +/- 15 bit
     v = v*64;
 
@@ -793,7 +1047,6 @@ void audio_dkong_bitrate(char is_dkong) {
   // DAC connected to port 0.
   
   // The effective sample rate thus is 6M/15/34 = 11764.7 Hz
-
   i2s_set_sample_rates(I2S_NUM_0, is_dkong?11765:24000);
 }
 
@@ -863,6 +1116,13 @@ void update_screen(void) {
   if(machine == MCH_DKONG)
   #endif
     dkong_prepare_frame();
+#endif
+
+#ifdef ENABLE_FROGGER
+  #ifndef SINGLE_MACHINE
+  if(machine == MCH_FROGGER)
+  #endif
+    frogger_prepare_frame();
 #endif
 
   // max possible video rate:

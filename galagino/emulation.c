@@ -33,6 +33,11 @@
 #include "i8048.h"
 #endif
 
+#ifdef ENABLE_FROGGER
+#include "frogger_rom1.h"
+#include "frogger_rom2.h"
+#endif
+
 extern void StepZ80(Z80 *R);
 Z80 cpu[3];    // up to three z80 supported
 
@@ -79,8 +84,22 @@ struct i8048_state_S cpu_8048;
 unsigned char dkong_sfx_index = 0x00;
 #endif
 
+#ifdef ENABLE_FROGGER
+unsigned char frogger_snd_irq_state = 0;
+unsigned char frogger_snd_command;
+unsigned char frogger_snd_ay_port;
+unsigned long frogger_snd_icnt;
+#endif
+
 #ifndef SINGLE_MACHINE
-signed char menu_sel = (int)((MACHINES+1)/2);       // default in game selection
+
+// if galaga is installed, then use it as default in menu
+#ifdef ENABLE_GALAGA
+signed char menu_sel = MCH_GALAGA;
+#else
+// otherwise just use the first game
+signed char menu_sel = 1;
+#endif
 
 #ifdef MASTER_ATTRACT_MENU_TIMEOUT
 // menu timeout for master attract mode which randomly start games
@@ -89,7 +108,7 @@ unsigned long master_attract_timeout = 0;
 
 #endif
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
+#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_FROGGER)
 // mirror of sounds registers
 unsigned char soundregs[32] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -99,22 +118,69 @@ unsigned char soundregs[32] = {
 
 void OutZ80(unsigned short Port, unsigned char Value) {
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN)
-#endif
+PACMAN_BEGIN
     irq_ptr = Value;
+PACMAN_END
+#endif
+
+#ifdef ENABLE_FROGGER
+ if(MACHINE_IS_FROGGER && (current_cpu == 1)) {
+    // 40 is the ay data port
+    if((Port & 0xff) == 0x40) {
+      soundregs[frogger_snd_ay_port] = Value;      
+      return;
+    }
+
+    // 80 is the ay control port selecting the register
+    if((Port & 0xff) == 0x80) {
+      frogger_snd_ay_port = Value & 15;
+      return;
+    }
+  }
 #endif
 }
   
-unsigned char InZ80(unsigned short Port) { return 0; }
+unsigned char InZ80(unsigned short Port) {
+#ifdef ENABLE_FROGGER  
+  static const unsigned char frogger_timer[20] = {
+    0x00, 0x10, 0x00, 0x10, 0x08, 0x18, 0x08, 0x18, 0x40, 0x50,
+    0x80, 0x90, 0x80, 0x90, 0x88, 0x98, 0x88, 0x98, 0xc0, 0xd0
+  };
+
+ if(MACHINE_IS_FROGGER && (current_cpu == 1)) {
+    // read AY data port
+    if((Port & 0xff) == 0x40) {
+      if(frogger_snd_ay_port < 14)
+        return soundregs[frogger_snd_ay_port];
+      
+      // port A, command register
+      if(frogger_snd_ay_port == 14)
+        return frogger_snd_command;
+
+      // port B, timer
+      if(frogger_snd_ay_port == 15) {
+        // AY and Z80 run at 1.75 MHz, the counter runs at the same
+        // speed. The cycle time thus is 570ns
+  
+        // using the instruction counter for the rate isn't perfect as it assumes all
+        // instructions run the same time ... which they don't
+        return frogger_timer[(frogger_snd_icnt/20)%20];
+      }
+  
+      return 0;
+    }
+ }
+#endif
+
+ return 0; 
+}
+
 void PatchZ80(Z80 *R) {}
 
 // Memory write -- write the Value to memory location Addr
 void WrZ80(unsigned short Addr, unsigned char Value) {
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN) 
-#endif  
+PACMAN_BEGIN
   {
     Addr &= 0x7fff;   // a15 is unused
     
@@ -148,15 +214,11 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
     if((Addr & 0xfffe) == 0x6ffe)
       return;
   } 
-#ifndef SINGLE_MACHINE
-  else
-#endif
+PACMAN_END
 #endif
 
 #ifdef ENABLE_GALAGA
-#ifdef ENABLE_DKONG
-  if(machine == MCH_GALAGA) 
-#endif
+GALAGA_BEGIN
   {  
     if(Addr < 16384) return;   // ignore rom writes
 
@@ -239,12 +301,11 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
     }     
 #endif
   }
-#ifdef ENABLE_DKONG
-  else /* if(machine == MCH_DKONG) */ 
-#endif
+GALAGA_END
 #endif  
 
 #ifdef ENABLE_DKONG
+DKONG_BEGIN
   {   
     if(((Addr & 0xf000) == 0x6000) || ((Addr & 0xf800) == 0x7000)) {
       memory[Addr - 0x6000] = Value;
@@ -302,14 +363,95 @@ void WrZ80(unsigned short Addr, unsigned char Value) {
       return;
     }
   }
+DKONG_END
+#endif  
+
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+  {
+    // frogger main cpu 
+    if(current_cpu == 0) {
+
+      // main ram
+      if((Addr & 0xf800) == 0x8000) {
+	memory[Addr - 0x8000] = Value;
+	return;
+      }
+
+      // tile ram
+      if((Addr & 0xfc00) == 0xa800) {
+	if(!game_started && Addr == 0xa800 + 800 && Value == 1)
+	  game_started = 1;
+	
+	memory[Addr - 0xa800 + 0x800] = Value;  // map to 0x0800
+	return;
+      }
+
+      // sprite ram
+      if((Addr & 0xff00) == 0xb000) {
+	memory[Addr - 0xb000 + 0xc00] = Value;   // map to 0x0c00
+	return;
+      }
+
+      // unknown
+      if(Addr == 0x8805) return;
+
+      if(Addr == 0xb808) {
+	irq_enable[0] = Value & 1;
+	return;
+      }
+
+      if(Addr == 0xb80c) return;      // flip screen Y
+      if(Addr == 0xb810) return;      // flip screen X
+      if(Addr == 0xb818) return;      // coin counter 1
+      if(Addr == 0xb81c) return;      // coin counter 2
+
+      // AY
+      if((Addr & 0xc000) == 0xc000) {
+	if(Addr == 0xd000) {
+	  // PA goes to AY port A and can be read by SND CPU through the AY
+	  frogger_snd_command = Value;
+	  return;
+	}
+	
+	if(Addr == 0xd002) {
+	  // rising edge on bit 3 sets audio irq
+	  // bit 4 is "am pm"
+	  // other bits go to connector
+
+	  // bit 0 = state written by CPU1
+	  if(!(frogger_snd_irq_state & 1) && (Value & 8))
+	    frogger_snd_irq_state |= 1;
+
+	  // CPU1 writes 0
+	  if(!(Value & 8) && (frogger_snd_irq_state & 1)) {
+	    frogger_snd_irq_state |= 2;
+	    frogger_snd_irq_state &= 0xfe;
+	  }
+	    
+	  return;
+	}
+	
+	if(Addr == 0xd006) return;  // ignore write to first 8255 control register	
+	if(Addr == 0xe006) return;  // ignore write to second 8255 control register
+      }
+    } else {
+      // frogger audio cpu
+      if((Addr & 0xfc00) == 0x4000) {
+      	memory[Addr - 0x4000 + 0x1000] = Value;
+	      return;
+      }
+      
+      if((Addr & 0xf000) == 0x6000) return;
+    }
+  }
+FROGGER_END
 #endif
 }
 
 unsigned char RdZ80(unsigned short Addr) {
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN)
-#endif 
+PACMAN_BEGIN
   {
     Addr &= 0x7fff;   // a15 is unused
     
@@ -348,15 +490,11 @@ unsigned char RdZ80(unsigned short Addr) {
       return 0xff;
     }
   }
-#ifndef SINGLE_MACHINE
-  else 
-#endif 
+PACMAN_END
 #endif
   
 #ifdef ENABLE_GALAGA
-#ifdef ENABLE_DKONG  
-  if(machine == MCH_GALAGA)
-#endif 
+GALAGA_BEGIN
   { 
     if(Addr < 16384) {
       if(current_cpu == 1)       return galaga_rom_cpu2[Addr];
@@ -434,12 +572,11 @@ unsigned char RdZ80(unsigned short Addr) {
     if((Addr & 0xe000) == 0x8000)
       return memory[Addr-0x8000];
   }
-#ifdef ENABLE_DKONG
-  else /* if(machine == MCH_DKONG) */
-#endif
+GALAGA_END
 #endif
 
 #ifdef ENABLE_DKONG
+DKONG_BEGIN
   {
     if(Addr < 16384)
       return dkong_rom_cpu1[Addr];
@@ -478,6 +615,68 @@ unsigned char RdZ80(unsigned short Addr) {
     if((Addr & 0xfff0) == 0x7d80)
       return DKONG_DIP;
   }
+DKONG_END
+#endif
+
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+  {
+    // frogger main cpu
+    if(current_cpu == 0) {
+    
+      if(Addr < 16384) {
+        // printf("#%d@%04x ROM read %04x\n", current_cpu, cpu[current_cpu].PC.W, Addr);
+        return frogger_rom_cpu1[Addr];
+      }
+
+      // frogger reads from $4000 and if that returns $55 it jumps t0 $4001
+      if(Addr == 0x4000) return 0x00;
+      
+      // 0x8000 - 0x87ff - main RAM
+      if((Addr & 0xf800) == 0x8000) return memory[Addr - 0x8000];
+      
+      // watchdog
+      if(Addr == 0x8800) return 0x00;
+
+      // 0xc000 - 0xffff - 8255
+      if((Addr & 0xc000) == 0xc000) {
+      	unsigned char keymask = buttons_get();
+	      unsigned char retval = 0xff;
+    
+      	// e000 = IN0: Coin1,Coin0,L1,R1,Fire1A,CREDIT,Fire1B,U2      
+	      if(Addr == 0xe000) {
+	        if(keymask & BUTTON_LEFT)  retval &= ~0x20;
+	        if(keymask & BUTTON_RIGHT) retval &= ~0x10;
+	        if(keymask & BUTTON_FIRE)  retval &= ~0x08;
+	        if(keymask & BUTTON_COIN)  retval &= ~0x04;
+	      }
+	
+	      // e002 = IN1: START1,START2,L2,R2,Fire2A,Fire2B,LIVES1,LIVES0
+	      if(Addr == 0xe002) {
+	        retval = FROGGER_DIP1 | 0xfc;
+	        if(keymask & BUTTON_START) retval &= ~0x80;
+      	}
+	
+      	// e004 = IN2: -,D1,-,U1,UPRIGHT,COINS_P_PLAY,D2
+	      if(Addr == 0xe004) {
+	        retval = FROGGER_DIP2 | 0xf9;
+	        if(keymask & BUTTON_UP)    retval &= ~0x10;
+	        if(keymask & BUTTON_DOWN)  retval &= ~0x40;
+      	}
+	
+      	// e006 = ???
+	
+      	return retval;
+      }
+    } else {
+      // frogger audio cpu
+      if(Addr <  6144) return frogger_rom_cpu2[Addr];
+
+      // main ram
+      if((Addr & 0xfc00) == 0x4000) return memory[Addr - 0x4000 + 0x1000];
+    }
+  }
+FROGGER_END
 #endif
   
   return -1;
@@ -525,8 +724,6 @@ void i8048_port_write(struct i8048_state_S *state, unsigned char port, unsigned 
     if(bptr == 64) {
       bptr = 0;
 
-      // printf("Dk buffer ready, ptr %d/%d, used %d\n", dkong_audio_wptr, dkong_audio_rptr,  (dkong_audio_wptr - dkong_audio_rptr)&DKONG_AUDIO_QUEUE_MASK);
-      
       // It must never happen that we get here with no free transfer buffers
       // available. This would mean that the buffers were full and the
       // 8048 emulation was still running. It should be stoppped as long as the
@@ -539,11 +736,8 @@ void i8048_port_write(struct i8048_state_S *state, unsigned char port, unsigned 
         dkong_audio_wptr = (dkong_audio_wptr + 1)&DKONG_AUDIO_QUEUE_MASK;
       }
     }
-    
-    // printf("@%04x DAC WR %02x\n", state->PC-1, pos);
-  } else if(port == 2) {
+  } else if(port == 2)
     state->p2_state = pos;
-  }
 }
 
 unsigned char i8048_port_read(struct i8048_state_S *state, unsigned char port) {
@@ -573,8 +767,9 @@ unsigned char i8048_xdm_read(struct i8048_state_S *state, unsigned char addr) {
 
 void prepare_emulation(void) {
   memory = malloc(8192);
+  memset(memory, 0, 8192);
 
-#ifdef MASTER_ATTRACT_MENU_TIMEOUT
+#if defined(MASTER_ATTRACT_MENU_TIMEOUT) && !defined(SINGLE_MACHINE)
   master_attract_timeout = millis();
 #endif
 
@@ -597,6 +792,12 @@ void emulate_frame(void) {
     // get a mask of currently pressed keys
     unsigned char keymask = buttons_get();     
 
+    // any key will cancel the master attract mode and
+    // the machine stays in the menu forever once the
+    // user has touched it
+    if(keymask)
+      master_attract_timeout = 0;
+	    
     if((keymask & BUTTON_UP) &&
 	    !(last_mask & BUTTON_UP)) menu_sel--;
     if((keymask & BUTTON_DOWN) &&
@@ -608,18 +809,20 @@ void emulate_frame(void) {
 	    !(last_mask & BUTTON_START))) {
 	    machine = menu_sel;
 
-	    // stop master attract mode
-	    master_attract_timeout = 0;
-  
-#ifdef ENABLE_DKONG
-      // dkong uses a different sample rate, so reconfigure audio if
-      // kong is requested
+#if defined(ENABLE_DKONG)
+      // dkong uses a different sample rate,
+      // so reconfigure audio if kong or frog is requested
       audio_dkong_bitrate(machine == MCH_DKONG);
 #endif
     }
 
+#ifndef MENU_SCROLL
     if(menu_sel < 1)         menu_sel = 1;
     if(menu_sel > MACHINES)  menu_sel = MACHINES;
+#else
+    if(menu_sel < 1)         menu_sel = MACHINES;
+    if(menu_sel > MACHINES)  menu_sel = 1;
+#endif
       
     last_mask = keymask;
 
@@ -645,9 +848,7 @@ void emulate_frame(void) {
 #endif  
 
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN) 
-#endif  
+PACMAN_BEGIN
   {
     for(int i=0;i<INST_PER_FRAME;i++) {
       StepZ80(cpu); StepZ80(cpu); StepZ80(cpu); StepZ80(cpu);
@@ -656,15 +857,11 @@ void emulate_frame(void) {
     if(irq_enable[0])
       IntZ80(cpu, irq_ptr);     
   }
-#ifndef SINGLE_MACHINE
-  else
-#endif
+PACMAN_END
 #endif  
 
 #ifdef ENABLE_GALAGA
-#ifdef ENABLE_DKONG
-  if(machine == MCH_GALAGA) 
-#endif
+GALAGA_BEGIN
   {
     for(int i=0;i<INST_PER_FRAME;i++) {
       current_cpu = 0;
@@ -684,6 +881,7 @@ void emulate_frame(void) {
         if(nmi_cnt < (cs_ctrl >> 5) * 64) {
           nmi_cnt++;
         } else {
+	        current_cpu = 0;
           IntZ80(&cpu[0], INT_NMI);
           nmi_cnt = 0;          
         }
@@ -691,19 +889,27 @@ void emulate_frame(void) {
 
       // run cpu2 nmi at ~line 64 and line 192
       if(!sub_cpu_reset && !irq_enable[2] &&
-         ((i == INST_PER_FRAME/4) || (i == 3*INST_PER_FRAME/4)))
-          IntZ80(&cpu[2], INT_NMI);
+         ((i == INST_PER_FRAME/4) || (i == 3*INST_PER_FRAME/4))) {
+	      current_cpu = 2;
+        IntZ80(&cpu[2], INT_NMI);
+      }
     }
     
-    if(irq_enable[0])                   IntZ80(&cpu[0], INT_RST38);
-    if(!sub_cpu_reset && irq_enable[1]) IntZ80(&cpu[1], INT_RST38);
+    if(irq_enable[0]) {
+      current_cpu = 0;
+      IntZ80(&cpu[0], INT_RST38);
+    }
+
+    if(!sub_cpu_reset && irq_enable[1]) {
+      current_cpu = 1;
+      IntZ80(&cpu[1], INT_RST38);
+    }
   }
-#ifdef ENABLE_DKONG
-  else /* if(machine == MCH_DKONG) */ 
-#endif
+GALAGA_END 
 #endif  
 
 #ifdef ENABLE_DKONG
+DKONG_BEGIN
   {
     game_started = 1; // TODO: make this from some graphic thing
     
@@ -723,8 +929,33 @@ void emulate_frame(void) {
     if(irq_enable[0])
       IntZ80(cpu, INT_NMI);
   }
+DKONG_END
 #endif
 
+#ifdef ENABLE_FROGGER
+FROGGER_BEGIN
+  {
+    for(int i=0;i<INST_PER_FRAME;i++) {
+      // audio CPU speed is crucial here as it determines the
+      // audio playback rate
+      current_cpu=0; StepZ80(&cpu[0]); StepZ80(&cpu[0]); StepZ80(&cpu[0]); StepZ80(&cpu[0]);
+      current_cpu=1; StepZ80(&cpu[1]); frogger_snd_icnt++; StepZ80(&cpu[1]); frogger_snd_icnt++;
+
+      // "latch" interrupt until CPU has them enabled
+      if(frogger_snd_irq_state & 2 && cpu[1].IFF & IFF_1) {
+	      IntZ80(&cpu[1], INT_RST38);
+      	frogger_snd_irq_state &= ~2;  // clear flag
+      }	
+    }
+      
+    if(irq_enable[0]) {
+      current_cpu = 0;
+      IntZ80(&cpu[0], INT_NMI);
+    }
+  }
+FROGGER_END
+#endif
+  
   sof = micros() - sof;
 
   // It may happen that the emulation runs too slow. It will then miss the

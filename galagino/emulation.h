@@ -20,26 +20,102 @@ extern unsigned char dkong_audio_rptr, dkong_audio_wptr;
 #define BUTTON_COIN  0x40
 
 #ifndef SINGLE_MACHINE
-  #define MCH_MENU         0
-  #ifdef ENABLE_PACMAN
-    #define MCH_PACMAN     1
-    #ifdef ENABLE_GALAGA
-      #define MCH_GALAGA   2
-      #ifdef ENABLE_DKONG
-        #define MCH_DKONG  3
-        #define MACHINES   3
+enum {
+      MCH_MENU = 0,
+#ifdef ENABLE_PACMAN
+      MCH_PACMAN,
+#endif
+#ifdef ENABLE_GALAGA
+      MCH_GALAGA,
+#endif
+#ifdef ENABLE_DKONG
+      MCH_DKONG,
+#endif
+#ifdef ENABLE_FROGGER
+      MCH_FROGGER,
+#endif
+      MCH_LAST
+};
+
+#define MACHINES  (MCH_LAST-1)
+#endif
+
+// wrapper around machine specific code sections allowing to compile only
+// code in that's needed for enabled machines
+
+#ifdef ENABLE_PACMAN
+  #ifdef SINGLE_MACHINE
+    #define MACHINE_IS_PACMAN  1
+    #define PACMAN_BEGIN
+    #define PACMAN_END
+  #else
+    #define MACHINE_IS_PACMAN  (machine == MCH_PACMAN)
+    // pacman is always the first entry
+    #define PACMAN_BEGIN  if(machine == MCH_PACMAN) {
+    #define PACMAN_END    }
+  #endif
+#endif
+
+#ifdef ENABLE_GALAGA
+  #ifdef SINGLE_MACHINE
+    #define MACHINE_IS_GALAGA  1
+    #define GALAGA_BEGIN
+    #define GALAGA_END
+  #else
+    #define MACHINE_IS_GALAGA  (machine == MCH_GALAGA)
+    // galaga is not the first if pacman is enabled
+    #ifdef ENABLE_PACMAN
+      // donkey kong or frogger may come afterwards
+      #if defined(ENABLE_DKONG) || defined(ENABLE_FROGGER)      
+        #define GALAGA_BEGIN  else if(machine == MCH_GALAGA) {
       #else
-        #define MACHINES   2
+        #define GALAGA_BEGIN  else {
       #endif
     #else
-      #define MCH_DKONG    2
-      #define MACHINES     2
+      #define GALAGA_BEGIN  if(machine == MCH_GALAGA) {
     #endif
-  #else
-    #define MCH_GALAGA     1
-    #define MCH_DKONG      2   
-    #define MACHINES       2
+    #define GALAGA_END    }
   #endif
+#endif
+
+#ifdef ENABLE_DKONG
+  #ifdef SINGLE_MACHINE
+    #define MACHINE_IS_DKONG  1
+    #define DKONG_BEGIN
+    #define DKONG_END
+  #else
+    #define MACHINE_IS_DKONG  (machine == MCH_DKONG)
+    // dkong is not the first if pacman or galaga are enabled
+    #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
+      // frogger may come afterwards
+      #ifdef ENABLE_FROGGER
+        #define DKONG_BEGIN  else if(machine == MCH_DKONG) {
+      #else
+        #define DKONG_BEGIN  else {
+      #endif
+    #else
+      #define DKONG_BEGIN  if(machine == MCH_DKONG) {
+    #endif
+    #define DKONG_END    }
+  #endif
+#endif
+
+#ifdef ENABLE_FROGGER
+  #ifdef SINGLE_MACHINE
+    #define MACHINE_IS_FROGGER  1
+    #define FROGGER_BEGIN
+    #define FROGGER_END
+  #else
+    #define MACHINE_IS_FROGGER  (machine == MCH_FROGGER)
+    // frogger is never first and always last
+    #define FROGGER_BEGIN  else {
+    #define FROGGER_END    }
+  #endif
+#endif
+
+// scolling menu is needed whenever more than 3 machies are enabled
+#if defined(ENABLE_PACMAN) && defined(ENABLE_GALAGA) && defined(ENABLE_DKONG) && defined(ENABLE_FROGGER)
+#define MENU_SCROLL
 #endif
 
 #if defined(__cplusplus)
