@@ -22,41 +22,30 @@ extern const unsigned char frogger_rom_cpu2[];
 
 static inline byte OpZ80_INL(register word Addr) {
 #ifdef ENABLE_PACMAN
-  #ifndef SINGLE_MACHINE
-    if(machine == MCH_PACMAN)
-  #endif
-      return pacman_rom[Addr];
-  #ifndef SINGLE_MACHINE
-    else 
-  #endif 
+PACMAN_BEGIN
+    return pacman_rom[Addr];
+PACMAN_END
 #endif
   
 #ifdef ENABLE_GALAGA
-  #if defined(ENABLE_DKONG) || defined(ENABLE_FROGGER)
-    if(machine == MCH_GALAGA)
-  #endif 
-    { 
-      if(current_cpu == 1)       return galaga_rom_cpu2[Addr];
-      else if(current_cpu == 2)  return galaga_rom_cpu3[Addr];
-      return galaga_rom_cpu1[Addr];
-    }
-  #if definded(ENABLE_DKONG) || defined(ENABLE_FROGGER)
-    else /* if(machine == MCH_DKONG) */
-  #endif
+GALAGA_BEGIN
+    if(current_cpu == 1)       return galaga_rom_cpu2[Addr];
+    else if(current_cpu == 2)  return galaga_rom_cpu3[Addr];
+    return galaga_rom_cpu1[Addr];
+GALAGA_END
 #endif
 
 #ifdef ENABLE_DKONG
-  #ifdef ENABLE_FROGGER
-    if(machine == MCH_DKONG)
-  #endif 
-  {
+DKONG_BEGIN
     return dkong_rom_cpu1[Addr];
-  }
+DKONG_END
 #endif
 
 #ifdef ENABLE_FROGGER
+FROGGER_BEGIN
    if(current_cpu == 0) return frogger_rom_cpu1[Addr];
    else                 return frogger_rom_cpu2[Addr];
+FROGGER_END
 #endif
 }
 """
