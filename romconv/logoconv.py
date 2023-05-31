@@ -90,9 +90,10 @@ def parse_logo(inname, outname):
     
 if len(sys.argv) != 3:
     print("Usage:",sys.argv[0], "<infile> <outfile>")
-    print("  for Pacman:     ", sys.argv[0], "../logos/pacman.png ../galagino/pacman_logo.h")
-    print("  for Galaga:     ", sys.argv[0], "../logos/galaga.png ../galagino/galaga_logo.h")
-    print("  for Donkey Kong:", sys.argv[0], "../logos/dkong.png ../galagino/dkong_logo.h")
+    print("  Pacman:     ", sys.argv[0], "../logos/pacman.png ../galagino/pacman_logo.h")
+    print("  Galaga:     ", sys.argv[0], "../logos/galaga.png ../galagino/galaga_logo.h")
+    print("  Donkey Kong:", sys.argv[0], "../logos/dkong.png ../galagino/dkong_logo.h")
+    print("  Frogger:    ", sys.argv[0], "../logos/frogger.png ../galagino/frogger_logo.h")
     exit(-1)
 
 parse_logo(sys.argv[1], sys.argv[2])

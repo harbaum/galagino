@@ -21,7 +21,28 @@ def dump_sprite(data, flip_x, flip_y):
 
     return ",".join(hexs)
     
-def parse_sprite_2(data):
+def parse_sprite_frogger(data):
+    # in frogger D0/D1 of first rom are swapped
+    d0 = list(data[0])
+    for i in range(len(d0)):
+        d0[i] = (d0[i] & 0xfc) | ((d0[i] & 1)<<1) | ((d0[i] & 2)>>1)
+    data[0] = bytes(d0)
+    
+    # frogger has parts of each sprite distributed over both roms
+    sprite = []    
+    for y in range(16):
+        row = [ ]
+        for x in range(16):
+            ym = y & 7 | ((x & 8) ^ 8)
+            xm = x & 7 | (y & 8)
+            
+            c0 = 1 if data[0][(xm^7) + ((ym & 8) << 1)] & (0x80 >> (ym&7)) else 0
+            c1 = 2 if data[1][(xm^7) + ((ym & 8) << 1)] & (0x80 >> (ym&7)) else 0
+            row.append(c0+c1)
+        sprite.append(row)
+    return sprite
+
+def parse_sprite_dkong(data):
     # dkong has parts of each sprite distributed over all four roms
     sprite = []    
     for y in range(16):
@@ -63,11 +84,31 @@ def dump_c_source(sprites, flip_x, flip_y, f):
     if flip_x and flip_y: print(" }", file=f)
     else:                 print(" },", file=f)
 
-def parse_spritemap(id, pacman_fmt, infiles, outfile):
+def parse_spritemap(id, fmt, infiles, outfile):
     sprites = []
 
+    if fmt == "frogger":
+        # frogger uses the tilemap roms for sprites as well
+        spritemap_data = []
+        for file in infiles:        
+            f = open(file, "rb")
+            spritemap_data.append(f.read())
+            f.close()
+            
+            if len(spritemap_data[-1]) != 2048:
+                raise ValueError("Missing spritemap data")
+
+        # most of these aren't sprites but tiles. Converting them all
+        # won't hurt as flash memory is no the limit
+        for sprite in range(64):
+            data = []
+            for i in range(2):
+                data.append(spritemap_data[i][32*sprite:32*(sprite+1)])
+            
+            sprites.append(parse_sprite_frogger(data))
+
     # pacman and galaga
-    if len(infiles) <= 2:    
+    elif len(infiles) <= 2:    
         for name in infiles:    
             f = open(name, "rb")
             spritemap_data = f.read()
@@ -78,7 +119,7 @@ def parse_spritemap(id, pacman_fmt, infiles, outfile):
 
             # read and parse all 64 sprites
             for sprite in range(64):
-                sprites.append(parse_sprite(spritemap_data[64*sprite:64*(sprite+1)], pacman_fmt))
+                sprites.append(parse_sprite(spritemap_data[64*sprite:64*(sprite+1)], fmt == "pacman"))
     else: # dkong
         spritemap_data = []
         for file in infiles:        
@@ -94,9 +135,9 @@ def parse_spritemap(id, pacman_fmt, infiles, outfile):
             for i in range(4):
                 data.append(spritemap_data[i][16*sprite:16*(sprite+1)])
             
-            sprites.append(parse_sprite_2(data))
+            sprites.append(parse_sprite_dkong(data))
 
-    # for s in sprites: show_sprite(s)
+    # for s in sprites: print(""); show_sprite(s)
     
     f=open(outfile, "w")
     print("// autoconverted sprite data", file=f)
@@ -118,7 +159,8 @@ if len(sys.argv) < 5:
     print("  for Galaga:     ", sys.argv[0], "galaga_sprites galaga ../roms/gg1_11.4d ../roms/gg1_10.4f ../galagino/galaga_spritemap.h")
     print("  for Pacman:     ", sys.argv[0], "pacman_sprites pacman ../roms/pacman.5f ../galagino/pacman_spritemap.h")
     print("  for Donkey Kong:", sys.argv[0], "dkong_sprites dkong ../roms/l_4m_b.bin  ../roms/l_4n_b.bin  ../roms/l_4r_b.bin  ../roms/l_4s_b.bin../galagino/dkong_spritemap.h")
+    print("  for Frogger:    ", sys.argv[0], "frogger_sprites frogger ../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_spritemap.h")
     exit(-1)
     
-parse_spritemap(sys.argv[1], sys.argv[2] == "pacman", sys.argv[3:-1], sys.argv[-1])
+parse_spritemap(sys.argv[1], sys.argv[2], sys.argv[3:-1], sys.argv[-1])
 

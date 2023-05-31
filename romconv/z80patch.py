@@ -17,6 +17,8 @@ extern const unsigned char galaga_rom_cpu1[];
 extern const unsigned char galaga_rom_cpu2[];
 extern const unsigned char galaga_rom_cpu3[];
 extern const unsigned char dkong_rom_cpu1[];
+extern const unsigned char frogger_rom_cpu1[];
+extern const unsigned char frogger_rom_cpu2[];
 
 static inline byte OpZ80_INL(register word Addr) {
 #ifdef ENABLE_PACMAN
@@ -30,7 +32,7 @@ static inline byte OpZ80_INL(register word Addr) {
 #endif
   
 #ifdef ENABLE_GALAGA
-  #ifdef ENABLE_DKONG  
+  #if defined(ENABLE_DKONG) || defined(ENABLE_FROGGER)
     if(machine == MCH_GALAGA)
   #endif 
     { 
@@ -38,13 +40,23 @@ static inline byte OpZ80_INL(register word Addr) {
       else if(current_cpu == 2)  return galaga_rom_cpu3[Addr];
       return galaga_rom_cpu1[Addr];
     }
-  #ifdef ENABLE_DKONG
+  #if definded(ENABLE_DKONG) || defined(ENABLE_FROGGER)
     else /* if(machine == MCH_DKONG) */
   #endif
 #endif
 
 #ifdef ENABLE_DKONG
-  return dkong_rom_cpu1[Addr];
+  #ifdef ENABLE_FROGGER
+    if(machine == MCH_DKONG)
+  #endif 
+  {
+    return dkong_rom_cpu1[Addr];
+  }
+#endif
+
+#ifdef ENABLE_FROGGER
+   if(current_cpu == 0) return frogger_rom_cpu1[Addr];
+   else                 return frogger_rom_cpu2[Addr];
 #endif
 }
 """

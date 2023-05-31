@@ -26,10 +26,14 @@ def parse_rom(id, infiles, outfile, apply_patches = False):
         rom_data = f.read()
         f.close()
 
-#        if infiles[0].split(".")[-1] != "s8":
-#            if len(rom_data) != 4096:
-#                raise ValueError("Missing rom data")
-
+        # the first frogger audio cpu rom has bits
+        # d0 and d1 swapped. Fix this
+        if rom_data[:8] == bytes([0x05,0x00,0x22,0x00,0x40,0xc3,0x0b,0x02]):
+            rom_data = list(rom_data)
+            for i in range(len(rom_data)):
+                rom_data[i] = (rom_data[i] & 0xfc) | ((rom_data[i] & 2)>>1) | ((rom_data[i] & 1)<<1)
+            rom_data = bytes(rom_data)
+            
         # apply patches
         if apply_patches:
             rom_data = list(rom_data)
@@ -65,6 +69,8 @@ if len(sys.argv) < 3:
     print("  Pacman:           ", sys.argv[0], "pacman_rom ../roms/pacman.6e ../roms/pacman.6f ../roms/pacman.6h ../roms/pacman.6j ../galagino/pacman_rom.h")
     print("  Donkey Kong CPU1: ", sys.argv[0], "dkong_rom_cpu1 ../roms/c_5et_g.bin ../roms/c_5ct_g.bin ../roms/c_5bt_g.bin ../roms/c_5at_g.bin ../galagino/dkong_rom1.h")
     print("  Donkey Kong CPU2: ", sys.argv[0], "dkong_rom_cpu2 ../roms/s_3i_b.bin ../roms/s_3j_b.bin ../galagino/dkong_rom2.h")
+    print("  Frogger CPU1:     ", sys.argv[0], "frogger_rom_cpu1 ../roms/frogger.26 ../roms/frogger.27 ../roms/frsm3.7 ../galagino/frogger_rom1.h")
+    print("  Frogger CPU2:     ", sys.argv[0], "frogger_rom_cpu2 ../roms/frogger.608 ../roms/frogger.609 ../roms/frogger.610 ../galagino/frogger_rom2.h")
     exit(-1)
 
 if sys.argv[1] == "-p":       

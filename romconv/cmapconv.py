@@ -30,7 +30,7 @@ def parse_palette(name, name2=None):
             g = 63 - 63*((c>>2) & 0x7)//7
             b = 31 - 31*((c>>0) & 0x3)//3
         else:
-            # galaga and pacman bbgggrrr mapping
+            # galaga, pacman and frogger bbgggrrr mapping
             
             # This doesn't 100% match the weighting each bit has
             # on the real machine with 1000, 470 and 220 ohms resistors.
@@ -118,16 +118,33 @@ def parse_colormap_dkong(id, inname, palette, outname):
     print("};", file=f)
     
     f.close()
+
+def dump_palette(id, outname, palette):
+    # write as c source
+    f = open(outname, "w")
+    print("const unsigned short "+id+"[][4] = {", file=f )
+    colors = []
+    for idx in range(8):
+        c = palette[4*idx:4*(idx+1)]
+        colors.append("{" + ",".join([ hex(a) for a in c ]) +"}")
     
-if len(sys.argv) != 6 and len(sys.argv) != 7:
+    print(",\n".join(colors), file=f)
+    print("};", file=f)
+    f.close()
+    
+if len(sys.argv) < 4 or len(sys.argv) > 7 or len(sys.argv) == 5:
     print("Usage:",sys.argv[0], "name <palettefiles> offset <tablefile> <outfile>")
     print("  for Galaga sprites:", sys.argv[0], "galaga_colormap_sprites ../roms/prom-5.5n 0 ../roms/prom-3.1c ../galagino/galaga_cmap_sprites.h")
     print("  for Galaga tiles:  ", sys.argv[0], "galaga_colormap_tiles ../roms/prom-5.5n 16 ../roms/prom-4.2n ../galagino/galaga_cmap_tiles.h")
     print("  for Pacman:        ", sys.argv[0], "pacman_colormap ../roms/82s123.7f 0 ../roms/82s126.4a ../galagino/pacman_cmap.h")
     print("  for Donkey Kong:   ", sys.argv[0], "dkong_colormap ../roms/c-2k.bpr ../roms/c-2j.bpr 0 ../roms/v-5e.bpr ../galagino/dkong_cmap.h")
+    print("  for Frogger:       ", sys.argv[0], "frogger_colormap ../roms/pr-91.6l ../galagino/frogger_cmap.h")
     exit(-1)
 
-if len(sys.argv) == 6:
+if len(sys.argv) == 4:
+    palette = parse_palette(sys.argv[2])
+    dump_palette(sys.argv[1], sys.argv[3], palette)
+elif len(sys.argv) == 6:
     palette = parse_palette(sys.argv[2])
     offset = int(sys.argv[3])
     parse_colormap(sys.argv[1], sys.argv[4], palette[offset:offset+16], sys.argv[5])
