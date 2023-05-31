@@ -23,9 +23,17 @@ converted the [audio samples](../samples) also need to be converted.
 
 The logo conversion for the game selection menu might require the
 seperate installation of the ```imageio python module``` which can
-e.g. be done by the following command:
+e.g. be done by the following command. This is usually not needed as
+the logos are included pre-converted. This is only needed if you intend
+the change the logos.
 
 ```pip3 install imageio```
+
+## Do-it-all script
+
+A [shell script](conv.sh) is included that does all the conversion.
+If you prefer to do everything manually, then use the instructions
+below. Otherwise running the script is all you need to do.
 
 ## Generic ROM conversion
 
@@ -114,8 +122,8 @@ the [samples](../samples) directory.
 
 ## Frogger ROM conversion
 
-Frogger uses the same ROM for tiles and sprites. The same ROM is this used to
-generate the tile data as well as the sprite data using the following commands:
+Frogger uses the same ROM for tiles and sprites. Sprite and tile
+coversion thus operate on the same files using the following commands:
 
 ```
 ./cmapconv.py frogger_colormap ../roms/pr-91.6l ../galagino/frogger_cmap.h
