@@ -50,3 +50,12 @@ Files needed from the [Donkey Kong (US set 1)](https://www.bing.com/search?q=don
 * ```l_4m_b.bin```, ```l_4n_b.bin```, ```l_4r_b.bin```, ```l_4s_b.bin``` - sprite graphics
 * ```c-2j.bpr```, ```v-5e.bpr``` - colormap
 * ```c-2k.bpr``` - color palette
+
+## Frogger
+
+Files needed from the [Frogger Konami](https://www.bing.com/search?q=frogger+konami+arcade+rom) romset:
+
+* ```frogger.26```, ```frogger.27```, ```frsm3.7``` - CPU1 rom
+* ```frogger.608```, ```frogger.609```, ```frogger.610``` - CPU2 rom
+* ```frogger.606```, ```frogger.607``` - tile and sprite graphics
+* ```pr-91.6l ``` - color palette
