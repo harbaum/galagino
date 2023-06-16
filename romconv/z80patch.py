@@ -10,44 +10,6 @@ FILES2COPY=[ "CodesCB.h", "Codes.h", "CodesXX.h", "CodesED.h", "CodesXCB.h", "Ta
 Z80H_EXTRA=b"""
 #include "config.h"
 #include "emulation.h"
-
-extern char current_cpu;
-extern const unsigned char pacman_rom[];
-extern const unsigned char galaga_rom_cpu1[];
-extern const unsigned char galaga_rom_cpu2[];
-extern const unsigned char galaga_rom_cpu3[];
-extern const unsigned char dkong_rom_cpu1[];
-extern const unsigned char frogger_rom_cpu1[];
-extern const unsigned char frogger_rom_cpu2[];
-
-static inline byte OpZ80_INL(register word Addr) {
-#ifdef ENABLE_PACMAN
-PACMAN_BEGIN
-    return pacman_rom[Addr];
-PACMAN_END
-#endif
-  
-#ifdef ENABLE_GALAGA
-GALAGA_BEGIN
-    if(current_cpu == 1)       return galaga_rom_cpu2[Addr];
-    else if(current_cpu == 2)  return galaga_rom_cpu3[Addr];
-    return galaga_rom_cpu1[Addr];
-GALAGA_END
-#endif
-
-#ifdef ENABLE_DKONG
-DKONG_BEGIN
-    return dkong_rom_cpu1[Addr];
-DKONG_END
-#endif
-
-#ifdef ENABLE_FROGGER
-FROGGER_BEGIN
-   if(current_cpu == 0) return frogger_rom_cpu1[Addr];
-   else                 return frogger_rom_cpu2[Addr];
-FROGGER_END
-#endif
-}
 """
 
 Z80C_EXTRA=b"""

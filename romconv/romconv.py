@@ -71,6 +71,11 @@ if len(sys.argv) < 3:
     print("  Donkey Kong CPU2: ", sys.argv[0], "dkong_rom_cpu2 ../roms/s_3i_b.bin ../roms/s_3j_b.bin ../galagino/dkong_rom2.h")
     print("  Frogger CPU1:     ", sys.argv[0], "frogger_rom_cpu1 ../roms/frogger.26 ../roms/frogger.27 ../roms/frsm3.7 ../galagino/frogger_rom1.h")
     print("  Frogger CPU2:     ", sys.argv[0], "frogger_rom_cpu2 ../roms/frogger.608 ../roms/frogger.609 ../roms/frogger.610 ../galagino/frogger_rom2.h")
+    print("  Digdug CPU1:      ", sys.argv[0], "digdug_rom_cpu1 ../roms/dd1a.1 ../roms/dd1a.2 ../roms/dd1a.3 ../roms/dd1a.4 ../galagino/digdug_rom1.h")
+    print("  Digdug CPU2:      ", sys.argv[0], "digdug_rom_cpu2 ../roms/dd1a.5 ../roms/dd1a.6 ../galagino/digdug_rom2.h")
+    print("  Digdug CPU3:      ", sys.argv[0], "digdug_rom_cpu3 ../roms/dd1.7 ../galagino/digdug_rom3.h")
+    print("  Digdug Playfield: ", sys.argv[0], "digdug_playfield ../roms/dd1.10b ../galagino/digdug_playfield.h")
+
     exit(-1)
 
 if sys.argv[1] == "-p":       

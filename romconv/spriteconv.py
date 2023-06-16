@@ -107,8 +107,8 @@ def parse_spritemap(id, fmt, infiles, outfile):
             
             sprites.append(parse_sprite_frogger(data))
 
-    # pacman and galaga
-    elif len(infiles) <= 2:    
+    # pacman, galaga and digdug
+    elif fmt == "pacman" or fmt == "galaga" or fmt == "digdug":    
         for name in infiles:    
             f = open(name, "rb")
             spritemap_data = f.read()
@@ -120,6 +120,7 @@ def parse_spritemap(id, fmt, infiles, outfile):
             # read and parse all 64 sprites
             for sprite in range(64):
                 sprites.append(parse_sprite(spritemap_data[64*sprite:64*(sprite+1)], fmt == "pacman"))
+                
     else: # dkong
         spritemap_data = []
         for file in infiles:        
@@ -137,13 +138,13 @@ def parse_spritemap(id, fmt, infiles, outfile):
             
             sprites.append(parse_sprite_dkong(data))
 
-    # for s in sprites: print(""); show_sprite(s)
+    # for s in range(len(sprites)): print(s); show_sprite(sprites[s])
     
     f=open(outfile, "w")
     print("// autoconverted sprite data", file=f)
     print("", file=f)
-    
-    print("const unsigned long "+id+"[][128][16] = {", file=f)
+
+    print("const unsigned long "+id+"[]["+str(len(sprites))+"][16] = {", file=f)
     
     dump_c_source(sprites, False, False, f)
     
@@ -156,10 +157,11 @@ def parse_spritemap(id, fmt, infiles, outfile):
 
 if len(sys.argv) < 5:
     print("Usage:",sys.argv[0], "id format <infiles> <outfile>")
-    print("  for Galaga:     ", sys.argv[0], "galaga_sprites galaga ../roms/gg1_11.4d ../roms/gg1_10.4f ../galagino/galaga_spritemap.h")
-    print("  for Pacman:     ", sys.argv[0], "pacman_sprites pacman ../roms/pacman.5f ../galagino/pacman_spritemap.h")
-    print("  for Donkey Kong:", sys.argv[0], "dkong_sprites dkong ../roms/l_4m_b.bin  ../roms/l_4n_b.bin  ../roms/l_4r_b.bin  ../roms/l_4s_b.bin ../galagino/dkong_spritemap.h")
-    print("  for Frogger:    ", sys.argv[0], "frogger_sprites frogger ../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_spritemap.h")
+    print("  Galaga:     ", sys.argv[0], "galaga_sprites galaga ../roms/gg1_11.4d ../roms/gg1_10.4f ../galagino/galaga_spritemap.h")
+    print("  Pacman:     ", sys.argv[0], "pacman_sprites pacman ../roms/pacman.5f ../galagino/pacman_spritemap.h")
+    print("  Donkey Kong:", sys.argv[0], "dkong_sprites dkong ../roms/l_4m_b.bin  ../roms/l_4n_b.bin  ../roms/l_4r_b.bin  ../roms/l_4s_b.bin ../galagino/dkong_spritemap.h")
+    print("  Frogger:    ", sys.argv[0], "frogger_sprites frogger ../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_spritemap.h")
+    print("  Digdug:     ", sys.argv[0], "digdug_sprites digdug ../roms/dd1.15 ../roms/dd1.14 ../roms/dd1.13 ../roms/dd1.12 ../galagino/digdug_spritemap.h")
     exit(-1)
     
 parse_spritemap(sys.argv[1], sys.argv[2], sys.argv[3:-1], sys.argv[-1])

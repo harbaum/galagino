@@ -134,11 +134,14 @@ def dump_palette(id, outname, palette):
     
 if len(sys.argv) < 4 or len(sys.argv) > 7 or len(sys.argv) == 5:
     print("Usage:",sys.argv[0], "name <palettefiles> offset <tablefile> <outfile>")
-    print("  for Galaga sprites:", sys.argv[0], "galaga_colormap_sprites ../roms/prom-5.5n 0 ../roms/prom-3.1c ../galagino/galaga_cmap_sprites.h")
-    print("  for Galaga tiles:  ", sys.argv[0], "galaga_colormap_tiles ../roms/prom-5.5n 16 ../roms/prom-4.2n ../galagino/galaga_cmap_tiles.h")
-    print("  for Pacman:        ", sys.argv[0], "pacman_colormap ../roms/82s123.7f 0 ../roms/82s126.4a ../galagino/pacman_cmap.h")
-    print("  for Donkey Kong:   ", sys.argv[0], "dkong_colormap ../roms/c-2k.bpr ../roms/c-2j.bpr 0 ../roms/v-5e.bpr ../galagino/dkong_cmap.h")
-    print("  for Frogger:       ", sys.argv[0], "frogger_colormap ../roms/pr-91.6l ../galagino/frogger_cmap.h")
+    print("  Galaga sprites:", sys.argv[0], "galaga_colormap_sprites ../roms/prom-5.5n 0 ../roms/prom-3.1c ../galagino/galaga_cmap_sprites.h")
+    print("  Galaga tiles:  ", sys.argv[0], "galaga_colormap_tiles ../roms/prom-5.5n 16 ../roms/prom-4.2n ../galagino/galaga_cmap_tiles.h")
+    print("  Pacman:        ", sys.argv[0], "pacman_colormap ../roms/82s123.7f 0 ../roms/82s126.4a ../galagino/pacman_cmap.h")
+    print("  Donkey Kong:   ", sys.argv[0], "dkong_colormap ../roms/c-2k.bpr ../roms/c-2j.bpr 0 ../roms/v-5e.bpr ../galagino/dkong_cmap.h")
+    print("  Frogger:       ", sys.argv[0], "frogger_colormap ../roms/pr-91.6l ../galagino/frogger_cmap.h")
+    print("  Digdug tiles:  ", sys.argv[0], "digdug_colormap_tiles ../roms/136007.113 0 ../roms/136007.112 ../galagino/digdug_cmap_tiles.h")
+    print("  Digdug sprites:", sys.argv[0], "digdug_colormap_sprites ../roms/136007.113 16 ../roms/136007.111 ../galagino/digdug_cmap_sprites.h")
+    print("  Digdug cmap:   ", sys.argv[0], "digdug_colormaps ../roms/136007.113 ../galagino/digdug_cmap.h")
     exit(-1)
 
 if len(sys.argv) == 4:
@@ -147,7 +150,10 @@ if len(sys.argv) == 4:
 elif len(sys.argv) == 6:
     palette = parse_palette(sys.argv[2])
     offset = int(sys.argv[3])
-    parse_colormap(sys.argv[1], sys.argv[4], palette[offset:offset+16], sys.argv[5])
+    if offset >= 0:
+        parse_colormap(sys.argv[1], sys.argv[4], palette[offset:offset+16], sys.argv[5])
+    else:
+        parse_colormap(sys.argv[1], sys.argv[4], palette, sys.argv[5])
 else:
     # dkong has the palette in two 4 bit roms
     palette = parse_palette(sys.argv[2], sys.argv[3])

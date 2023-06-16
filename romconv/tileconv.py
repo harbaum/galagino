@@ -44,6 +44,18 @@ def parse_chr(data):
         char.append(row)
     return char
             
+def parse_chr_dd(data):
+    # characters are 8x8 pixels
+    char = []    
+    for y in range(8):
+        row = []
+        for x in range(8):
+            byte = data[7 - x]
+            c = 3 if byte & (0x01 << y) else 0
+            row.append(c)
+        char.append(row)
+    return char
+            
 def parse_charmap(inname, outname):
     # The character map rom contains the same set of 128 characters
     # two times. The second set is upside down for cocktail mode. We
@@ -53,14 +65,22 @@ def parse_charmap(inname, outname):
     charmap_data = f.read()
     f.close()
 
-    if len(charmap_data) != 4096:
+    if len(charmap_data) != 4096 and len(charmap_data) != 2048:
         raise ValueError("Missing charmap data")
 
-    # read and parse all 256 characters
     chars = []
-    for chr in range(256):
-        chars.append(parse_chr(charmap_data[16*chr:16*(chr+1)]))
+    if len(charmap_data) == 4096:
+        # galaga 2bpp format
+    
+        # read and parse all 256 characters
+        for chr in range(256):
+            chars.append(parse_chr(charmap_data[16*chr:16*(chr+1)]))
 
+    else:
+        # digdug format
+        for chr in range(128):
+            chars.append(parse_chr_dd(charmap_data[8*chr:8*(chr+1)]))
+            
     # for c in chars: show_chr(c)
 
     # write as c source
@@ -134,10 +154,12 @@ def parse_charmap_2(innames, outname):
 
 if len(sys.argv) != 3 and len(sys.argv) != 4:
     print("Usage:",sys.argv[0], "<infile> <outfile>")
-    print("  for Galaga:     ", sys.argv[0], "../roms/gg1_9.4l ../galagino/galaga_tilemap.h")
-    print("  for Pacman:     ", sys.argv[0], "../roms/pacman.5e ../galagino/pacman_tilemap.h")
-    print("  for Donkey Kong:", sys.argv[0], "../roms/v_5h_b.bin ../roms/v_3pt.bin ../galagino/dkong_tilemap.h")
-    print("  for Frogger:    ", sys.argv[0], "../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_tilemap.h")
+    print("  Galaga:     ", sys.argv[0], "../roms/gg1_9.4l ../galagino/galaga_tilemap.h")
+    print("  Pacman:     ", sys.argv[0], "../roms/pacman.5e ../galagino/pacman_tilemap.h")
+    print("  Donkey Kong:", sys.argv[0], "../roms/v_5h_b.bin ../roms/v_3pt.bin ../galagino/dkong_tilemap.h")
+    print("  Frogger:    ", sys.argv[0], "../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_tilemap.h")
+    print("  Digdug:     ", sys.argv[0], "../roms/dd1.9 ../galagino/digdug_tilemap.h")
+    print("  Digdug pf:  ", sys.argv[0], "../roms/dd1.11 ../galagino/digdug_pftiles.h")
     exit(-1)
 
 if len(sys.argv) == 3:

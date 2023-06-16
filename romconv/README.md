@@ -133,3 +133,23 @@ coversion thus operate on the same files using the following commands:
 ./spriteconv.py frogger_sprites frogger ../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_spritemap.h
 ./tileconv.py ../roms/frogger.606 ../roms/frogger.607 ../galagino/frogger_tilemap.h
 ```
+
+## Digdug ROM conversion
+
+The Digdug hardware is very similar to Galaga. The video hardware is slightly more complex and
+there are more video related ROMs to be converted.
+
+```
+./cmapconv.py digdug_colormap_tiles ../roms/136007.113 0 ../roms/136007.112 ../galagino/digdug_cmap_tiles.h
+./cmapconv.py digdug_colormap_sprites ../roms/136007.113 16 ../roms/136007.111 ../galagino/digdug_cmap_sprites.h
+./cmapconv.py digdug_colormaps ../roms/136007.113 ../galagino/digdug_cmap.h
+./logoconv.py ../logos/digdug.png ../galagino/digdug_logo.h
+./audioconv.py digdug_wavetable ../roms/136007.110 ../roms/136007.109 ../galagino/digdug_wavetable.h
+./romconv.py digdug_rom_cpu1 ../roms/dd1a.1 ../roms/dd1a.2 ../roms/dd1a.3 ../roms/dd1a.4 ../galagino/digdug_rom1.h
+./romconv.py digdug_rom_cpu2 ../roms/dd1a.5 ../roms/dd1a.6 ../galagino/digdug_rom2.h
+./romconv.py digdug_rom_cpu3 ../roms/dd1.7 ../galagino/digdug_rom3.h
+./romconv.py digdug_playfield ../roms/dd1.10b ../galagino/digdug_playfield.h
+./spriteconv.py digdug_sprites digdug ../roms/dd1.15 ../roms/dd1.14 ../roms/dd1.13 ../roms/dd1.12 ../galagino/digdug_spritemap.h
+./tileconv.py ../roms/dd1.9 ../galagino/digdug_tilemap.h
+./tileconv.py ../roms/dd1.11 ../galagino/digdug_pftiles.h
+```
