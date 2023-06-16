@@ -1,8 +1,6 @@
 # Galagino - ESP32 Arcade Emulator
 
-Play Galaga, Pac-Man and Donkey Kong on the ESP32
-
-
+Play Galaga, Pac-Man, Donkey Kong, Frogger and Digdug on the ESP32
 
 ![Cabinet](images/galagino_cabinet.jpg)
 
