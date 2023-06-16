@@ -17,52 +17,27 @@
 
 #include "tileaddr.h"
 
+#define IO_EMULATION
+
 // include converted rom data
 #ifdef ENABLE_PACMAN
-#ifndef SINGLE_MACHINE
-#include "pacman_logo.h"
-#endif
-#include "pacman_tilemap.h"
-#include "pacman_spritemap.h"
-#include "pacman_cmap.h"
-#include "pacman_wavetable.h"
+#include "pacman.h"
 #endif
 
 #ifdef ENABLE_GALAGA
-#ifndef SINGLE_MACHINE
-#include "galaga_logo.h"
-#endif
-#include "galaga_spritemap.h"
-#include "galaga_tilemap.h"
-#include "galaga_cmap_tiles.h"
-#include "galaga_cmap_sprites.h"
-#include "galaga_wavetable.h"
-#include "galaga_sample_boom.h"
-#include "galaga_starseed.h"
+#include "galaga.h"
 #endif
 
 #ifdef ENABLE_DKONG
-#ifndef SINGLE_MACHINE
-#include "dkong_logo.h"
-#endif
-#include "dkong_tilemap.h"
-#include "dkong_spritemap.h"
-#include "dkong_cmap.h"
-
-#include "dkong_sample_walk0.h"
-#include "dkong_sample_walk1.h"
-#include "dkong_sample_walk2.h"
-#include "dkong_sample_jump.h"
-#include "dkong_sample_stomp.h"
+#include "dkong.h"
 #endif
 
 #ifdef ENABLE_FROGGER
-#ifndef SINGLE_MACHINE
-#include "frogger_logo.h"
+#include "frogger.h"
 #endif
-#include "frogger_tilemap.h"
-#include "frogger_spritemap.h"
-#include "frogger_cmap.h"
+
+#ifdef ENABLE_DIGDUG
+#include "digdug.h"
 #endif
 
 #ifndef SINGLE_MACHINE
@@ -265,6 +240,94 @@ void frogger_prepare_frame(void) {
 }
 #endif
 
+#ifdef ENABLE_DIGDUG
+void digdug_prepare_frame(void) {
+  // Do all the preparations to render a screen.
+  
+  /* preprocess sprites */
+  active_sprites = 0;
+  for(int idx=0;idx<64 && active_sprites<124;idx++) {
+    unsigned char *sprite_base_ptr = memory + 2*idx;
+    // check if sprite is visible
+    if ((sprite_base_ptr[0x1b80 + 1] & 2) == 0) {
+      struct sprite_S spr;     
+      
+      spr.code = sprite_base_ptr[0x0b80];
+      spr.color = sprite_base_ptr[0x0b80 + 1] & 0x3f;
+      spr.flags = sprite_base_ptr[0x1b80];
+      
+      // adjust sprite position on screen for upright screen
+      spr.x = sprite_base_ptr[0x1380] - 16;
+      spr.y = sprite_base_ptr[0x1380 + 1] - 40 + 1;
+      if(spr.y < 16) spr.y += 256;
+
+      if(sprite_base_ptr[0x0b80] & 0x80) {
+      	spr.flags |= 0x0c;
+      	spr.code = (spr.code & 0xc0) | ((spr.code & ~0xc0) << 2);
+      }
+
+      if((spr.y > -16) && (spr.y < 288) &&
+      	 (spr.x > -16) && (spr.x < 224)) {      
+
+      	// save sprite in list of active sprites
+      	sprite[active_sprites] = spr;
+	      // for horizontally doubled sprites, this one becomes the code + 2 part
+	      if(spr.flags & 0x08) sprite[active_sprites].code += 2;	
+	      active_sprites++;
+      }
+	
+      // handle horizontally doubled sprites
+      if((spr.flags & 0x08) &&
+      	 (spr.y > -16) && (spr.y < 288) &&
+	      ((spr.x+16) > -16) && ((spr.x+16) < 224)) {
+	      // place a copy right to the current one
+	      sprite[active_sprites] = spr;
+	      sprite[active_sprites].x += 16;
+	      active_sprites++;
+
+      	// on hflip swap both halfs
+	      if(spr.flags & 2) {
+	        int tmp = sprite[active_sprites-1].code;
+	        sprite[active_sprites-1].code = sprite[active_sprites-2].code;
+	        sprite[active_sprites-2].code = tmp;
+      	}
+      }
+
+      // handle vertically doubled sprites (these don't seem to happen
+      // in galaga)
+      if((spr.flags & 0x04) &&
+      	 ((spr.y+16) > -16) && ((spr.y+16) < 288) &&
+	        (spr.x > -16) && (spr.x < 224)) {      
+	      // place a copy below the current one
+	      sprite[active_sprites] = spr;
+	      sprite[active_sprites].code += 3;
+	      sprite[active_sprites].y += 16;
+	      active_sprites++;
+      }
+	
+      // handle in both directions doubled sprites
+      if(((spr.flags & 0x0c) == 0x0c) &&
+	      ((spr.y+16) > -16) && ((spr.y+16) < 288) &&
+	      ((spr.x+16) > -16) && ((spr.x+16) < 224)) {
+	      // place a copy right and below the current one
+	      sprite[active_sprites] = spr;
+	      sprite[active_sprites].code += 1;
+	      sprite[active_sprites].x += 16;
+	      sprite[active_sprites].y += 16;
+	      active_sprites++;
+	
+	      // on hflip swap both bottom halfs
+	      if(spr.flags & 2) {
+	        int tmp = sprite[active_sprites-1].code;
+	        sprite[active_sprites-1].code = sprite[active_sprites-2].code;
+	        sprite[active_sprites-2].code = tmp;
+      	}
+      }
+    }
+  }
+}
+#endif
+
 #ifdef ENABLE_GALAGA
 void render_stars_set(short row, const struct galaga_star *set) {    
   for(char star_cntr = 0;star_cntr < 63 ;star_cntr++) {
@@ -394,7 +457,54 @@ void blit_tile_scroll(short row, signed char col, short scroll) {
 }
 #endif
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
+#ifdef ENABLE_DIGDUG
+unsigned char digdug_video_latch = 0x00;
+
+// digdug has two layers, a playfield and characters
+void blit_tile_dd(short row, char col) {
+  unsigned short addr = tileaddr[row][col];
+    
+  // the playfield rom contains four playfields.
+  // 0: normal one
+  // 1: cross pattern
+  // 2: funny logo
+  // 3: monocolor
+
+  unsigned char chr = digdug_playfield[addr + (digdug_video_latch&3)*0x400];
+  unsigned char color = chr >> 4;
+  const unsigned short *tile = dd1_11[chr];   // playfield
+
+  // colorprom contains 4*16 color groups
+  const unsigned short *colors =
+    digdug_colormap_tiles[(digdug_video_latch&0x30)+color];
+
+  chr = memory[addr];
+  // upper four bits point directly into the colormap
+  const unsigned short *fgtile = dd1_9[chr & 0x7f];
+  unsigned short fgcol = ((unsigned short*)digdug_colormaps)
+    [((chr >> 4) & 0x0e) | ((chr >> 3) & 2)];
+
+  // this mode is never used in digdug
+  if(digdug_video_latch & 4)
+    fgcol = ((unsigned short*)digdug_colormaps)[chr & 15];
+
+  unsigned short *ptr = frame_buffer + 8*col;
+
+  // 8 pixel rows per tile
+  for(char r=0;r<8;r++,ptr+=(224-8)) {
+    unsigned short bg_pix = *tile++;
+    unsigned short fg_pix = *fgtile++;
+    // 8 pixel columns per tile
+    for(char c=0;c<8;c++,bg_pix>>=2,fg_pix>>=2) {
+      if(!(digdug_video_latch & 8)) *ptr = colors[bg_pix&3];
+      if(fg_pix & 3) *ptr = *ptr = fgcol;
+      ptr++;
+    }
+  }
+}
+#endif
+
+#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
 // render a single 16x16 sprite. This is called multiple times for
 // double sized sprites. This renders onto a single 224 x 8 tile row
 // thus will be called multiple times even for single sized sprites
@@ -419,6 +529,16 @@ GALAGA_BEGIN
     if(colors[0] != 0) return;   // not a valid colormap entry
   }
 GALAGA_END
+#endif
+
+#ifdef ENABLE_DIGDUG
+DIGDUG_BEGIN
+  {
+    spr = digdug_sprites[sprite[s].flags & 3][sprite[s].code];
+    colors = digdug_colormap_sprites[sprite[s].color & 63];
+    if(colors[0] != 0) return;   // not a valid colormap entry
+  }
+DIGDUG_END
 #endif
 
   // create mask for sprites that clip left or right
@@ -629,6 +749,9 @@ const unsigned short *logos[] = {
 #ifdef ENABLE_FROGGER    
   frogger_logo,
 #endif
+#ifdef ENABLE_DIGDUG    
+  digdug_logo,
+#endif
 };
 #endif
 
@@ -680,6 +803,7 @@ void render_line(short row) {
     if(row == 35) {
       // finally offset is bound to game, something like 96*game:    
       int new_offset = 96*((unsigned)(menu_sel-2)%MACHINES);
+      if(menu_sel == 1) new_offset = (MACHINES-1)*96;
 
       // check if we need to scroll
       if(new_offset != offset) {
@@ -790,8 +914,25 @@ FROGGER_BEGIN
   }
 FROGGER_END
 #endif
+  
+#ifdef ENABLE_DIGDUG
+DIGDUG_BEGIN
+  {
+    // render 28 tile columns per row
+    for(char col=0;col<28;col++)
+      blit_tile_dd(row, col);
+      
+    // render sprites
+    for(unsigned char s=0;s<active_sprites;s++) {
+      // check if sprite is visible on this row
+      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
+	      blit_sprite(row, s);
+    }
+  }
+DIGDUG_END
+#endif
 }
-
+  
 #ifdef ENABLE_GALAGA
 void galaga_trigger_sound_explosion(void) {
   if(game_started) {
@@ -801,7 +942,7 @@ void galaga_trigger_sound_explosion(void) {
 }
 #endif
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
+#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
 static unsigned long snd_cnt[3] = { 0,0,0 };
 static unsigned long snd_freq[3];
 static const signed char *snd_wave[3];
@@ -855,13 +996,16 @@ void snd_render_buffer(void) {
     #ifdef ENABLE_GALAGA
         || (machine == MCH_GALAGA)
     #endif
+    #ifdef ENABLE_DIGDUG
+        || (machine == MCH_DIGDUG)
+    #endif
     ) 
   #endif
     {
       // add up to three wave signals
-      if(snd_volume[0]) v += snd_volume[0] * snd_wave[0][(snd_cnt[0]>>14) & 0x1f];
-      if(snd_volume[1]) v += snd_volume[1] * snd_wave[1][(snd_cnt[1]>>14) & 0x1f];
-      if(snd_volume[2]) v += snd_volume[2] * snd_wave[2][(snd_cnt[2]>>14) & 0x1f];
+      if(snd_volume[0]) v += snd_volume[0] * snd_wave[0][(snd_cnt[0]>>13) & 0x1f];
+      if(snd_volume[1]) v += snd_volume[1] * snd_wave[1][(snd_cnt[1]>>13) & 0x1f];
+      if(snd_volume[2]) v += snd_volume[2] * snd_wave[2][(snd_cnt[2]>>13) & 0x1f];
 
   #ifdef ENABLE_GALAGA
       if(snd_boom_cnt) {
@@ -940,14 +1084,11 @@ FROGGER_END
   {
     // advance write pointer. The buffer is a ring
     dkong_audio_rptr = (dkong_audio_rptr+1)&DKONG_AUDIO_QUEUE_MASK;
-      
-    if(dkong_audio_rptr == dkong_audio_wptr)
-      printf("DK audio buffer emptied\n");
   }
 #endif
 }
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
+#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
 void audio_namco_waveregs_parse(void) {
 #ifndef SINGLE_MACHINE
   if(0
@@ -956,6 +1097,9 @@ void audio_namco_waveregs_parse(void) {
   #endif
   #ifdef ENABLE_GALAGA
     || (machine == MCH_GALAGA)
+  #endif
+  #ifdef ENABLE_DIGDUG
+    || (machine == MCH_DIGDUG)
   #endif
   )
 #endif   
@@ -975,16 +1119,22 @@ void audio_namco_waveregs_parse(void) {
       
         // wavetable entry
 #ifdef ENABLE_PACMAN
-  #ifdef ENABLE_GALAGA
+  #if defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)  // there's at least a second machine
         if(machine == MCH_PACMAN)
   #endif
           snd_wave[ch] = pacman_wavetable[soundregs[ch * 5 + 0x05] & 0x0f];
-  #ifdef ENABLE_GALAGA
+  #if defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
         else
   #endif      
 #endif      
 #ifdef ENABLE_GALAGA
+  #ifdef ENABLE_DIGDUG
+        if(machine == MCH_GALAGA)
+  #endif
           snd_wave[ch] = galaga_wavetable[soundregs[ch * 5 + 0x05] & 0x07];
+#endif      
+#ifdef ENABLE_DIGDUG
+          snd_wave[ch] = digdug_wavetable[soundregs[ch * 5 + 0x05] & 0x0f];
 #endif      
       }
     }
@@ -1092,37 +1242,33 @@ void update_screen(void) {
   uint32_t t0 = micros();
 
 #ifdef ENABLE_PACMAN
-  #ifndef SINGLE_MACHINE
-  if(machine == MCH_PACMAN)
-  #endif
-    pacman_prepare_frame();    
-  #ifndef SINGLE_MACHINE
-    else
-  #endif
+PACMAN_BEGIN
+  pacman_prepare_frame();    
+PACMAN_END
 #endif
 
 #ifdef ENABLE_GALAGA
-  #ifdef ENABLE_DKONG
-  if(machine == MCH_GALAGA)
-  #endif
-    galaga_prepare_frame();
-  #ifdef ENABLE_DKONG
-  else
-  #endif
+GALAGA_BEGIN
+  galaga_prepare_frame();
+GALAGA_END
 #endif  
   
 #ifdef ENABLE_DKONG
-  #ifndef SINGLE_MACHINE
-  if(machine == MCH_DKONG)
-  #endif
-    dkong_prepare_frame();
+DKONG_BEGIN
+  dkong_prepare_frame();
+DKONG_END
 #endif
 
 #ifdef ENABLE_FROGGER
-  #ifndef SINGLE_MACHINE
-  if(machine == MCH_FROGGER)
-  #endif
-    frogger_prepare_frame();
+FROGGER_BEGIN
+  frogger_prepare_frame();
+FROGGER_END
+#endif
+
+#ifdef ENABLE_DIGDUG
+DIGDUG_BEGIN
+  digdug_prepare_frame();
+DIGDUG_END
 #endif
 
   // max possible video rate:
@@ -1177,7 +1323,6 @@ void update_screen(void) {
  
   // one screen at 60 Hz is 16.6ms
   unsigned long t1 = (micros()-t0)/1000;  // calculate time in milliseconds
-//  printf("uspf %d\n", t1);
   if(t1<16) vTaskDelay(16-t1);
   else      vTaskDelay(1);    // at least 1 ms delay to prevent watchdog timeout
 
@@ -1212,7 +1357,7 @@ void setup() {
 
   // allocate memory for a single tile/character row
   frame_buffer = (unsigned short*)malloc(224*8*2);
-  sprite = (struct sprite_S*)malloc(96 * sizeof(struct sprite_S));
+  sprite = (struct sprite_S*)malloc(128 * sizeof(struct sprite_S));
   Serial.print("Free heap: "); Serial.println(ESP.getFreeHeap());
 
   // make button pins inputs

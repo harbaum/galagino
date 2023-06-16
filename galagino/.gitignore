@@ -11,6 +11,8 @@ Z80.h
 *_spritemap.h
 *_cmap*.h
 *_wavetable.h
+digdug_pftiles.h
+digdug_playfield.h  
 debug.cfg
 debug_custom.json
 esp32.svd

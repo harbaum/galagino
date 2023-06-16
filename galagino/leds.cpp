@@ -4,11 +4,6 @@
  * driver for the seven optional ws2812b marquee leds in galagino
  */
 
-/* 
- * TODO: Test
- * https://github.com/JSchaenzle/ESP32-NeoPixel-WS2812-RMT
- */
-
 #include "leds.h"
 
 #ifdef NUM_LEDS
@@ -47,11 +42,6 @@ void leds_check_galaga_sprite(struct sprite_S *spr) {
       // color 9 is regular ship color, color 7 is red captured one
       if(spr->color == 7)
       	led_state = 2;    // captured fighter
-      
-      if(spr->flags & 0x08)
-        ;
-      
-      // spr->code = 0x66;
     }
 
     // check for exploding enemies
@@ -83,6 +73,9 @@ void leds_update(void) {
 #endif
 #ifdef ENABLE_FROGGER
       { LED_RED, LED_GREEN, LED_YELLOW, LED_YELLOW, LED_YELLOW, LED_GREEN, LED_RED },
+#endif
+#ifdef ENABLE_DIGDUG
+      { LED_WHITE, LED_BLUE, LED_RED, LED_RED, LED_RED, LED_BLUE, LED_WHITE },
 #endif
     };
     memcpy(leds, menu_leds+menu_sel-1, NUM_LEDS*sizeof(CRGB));
@@ -182,6 +175,20 @@ FROGGER_BEGIN
     }    
   }
 FROGGER_END
+#endif
+
+#ifdef ENABLE_DIGDUG
+DIGDUG_BEGIN
+  { 
+    static const CRGB dd_bg_leds[] = {
+      CRGB(0x0000a4), CRGB(0x0000a4), CRGB(0xffb600), CRGB(0xd56d00),
+      CRGB(0xb42400), CRGB(0xb42400), CRGB(0x8b0000)
+    };
+ 
+    for(char c=0;c<NUM_LEDS;c++)
+      leds[c] = dd_bg_leds[c];
+  }
+DIGDUG_END
 #endif
 
   FastLED.show();
