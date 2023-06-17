@@ -216,26 +216,35 @@ extern const unsigned char digdug_rom_cpu3[];
 #define NONE  ((const unsigned char *)0l)
 
 static inline byte OpZ80_INL(register word Addr) {
+#ifndef SINGLE_MACHINE
   static const unsigned char *rom_table[][3] = {
     { NONE, NONE, NONE },
+#define ROM_ENDL ,
+#else
+  static const unsigned char *rom_table[3] =
+#define ROM_ENDL ;
+#endif
 #ifdef ENABLE_PACMAN 
-    { pacman_rom, NONE, NONE },
+    { pacman_rom, NONE, NONE } ROM_ENDL
 #endif
 #ifdef ENABLE_GALAGA
-    { galaga_rom_cpu1, galaga_rom_cpu2, galaga_rom_cpu3 },
+    { galaga_rom_cpu1, galaga_rom_cpu2, galaga_rom_cpu3 } ROM_ENDL
 #endif
 #ifdef ENABLE_DKONG
-    { dkong_rom_cpu1, NONE, NONE },
+    { dkong_rom_cpu1, NONE, NONE } ROM_ENDL
 #endif
 #ifdef ENABLE_FROGGER
-    { frogger_rom_cpu1, frogger_rom_cpu2, NONE },
+    { frogger_rom_cpu1, frogger_rom_cpu2, NONE } ROM_ENDL
 #endif
 #ifdef ENABLE_DIGDUG
-    { digdug_rom_cpu1, digdug_rom_cpu2, digdug_rom_cpu3 },
+    { digdug_rom_cpu1, digdug_rom_cpu2, digdug_rom_cpu3 } ROM_ENDL
 #endif  
+#ifndef SINGLE_MACHINE
   };
-
   return rom_table[machine][current_cpu][Addr];
+#else 
+  return rom_table[current_cpu][Addr];
+#endif
 }
 
 #endif // _EMULATION_H_
