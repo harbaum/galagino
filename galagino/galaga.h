@@ -232,4 +232,180 @@ static inline void galaga_run_frame(void) {
 #include "galaga_sample_boom.h"
 #include "galaga_starseed.h"
 
+#define USE_NAMCO_WAVETABLE
+
+unsigned char stars_scroll_y = 0;
+
+static inline void galaga_prepare_frame(void) {
+  // Do all the preparations to render a screen.
+  
+  leds_state_reset();
+  
+  /* preprocess sprites */
+  active_sprites = 0;
+  for(int idx=0;idx<64 && active_sprites<92;idx++) {
+    unsigned char *sprite_base_ptr = memory + 2*(63-idx);
+    // check if sprite is visible
+    if ((sprite_base_ptr[0x1b80 + 1] & 2) == 0) {
+      struct sprite_S spr;     
+      
+      spr.code = sprite_base_ptr[0x0b80];
+      spr.color = sprite_base_ptr[0x0b80 + 1];
+      spr.flags = sprite_base_ptr[0x1b80];
+      spr.x = sprite_base_ptr[0x1380] - 16;
+      spr.y = sprite_base_ptr[0x1380 + 1] +
+	      0x100*(sprite_base_ptr[0x1b80 + 1] & 1) - 40;
+
+      if((spr.code < 128) &&
+    	   (spr.y > -16) && (spr.y < 288) &&
+	       (spr.x > -16) && (spr.x < 224)) {      
+
+#ifdef LED_PIN
+        leds_check_galaga_sprite(&spr);
+#endif
+
+    	  // save sprite in list of active sprites
+	      sprite[active_sprites] = spr;
+      	// for horizontally doubled sprites, this one becomes the code + 2 part
+	      if(spr.flags & 0x08) sprite[active_sprites].code += 2;	
+	      active_sprites++;
+      }
+
+      // handle horizontally doubled sprites
+      if((spr.flags & 0x08) &&
+    	   (spr.y > -16) && (spr.y < 288) &&
+    	   ((spr.x+16) >= -16) && ((spr.x+16) < 224)) {
+	      // place a copy right to the current one
+	      sprite[active_sprites] = spr;
+	      sprite[active_sprites].x += 16;
+	      active_sprites++;
+      }
+
+      // handle vertically doubled sprites
+      // (these don't seem to happen in galaga)
+      if((spr.flags & 0x04) &&
+	       ((spr.y+16) > -16) && ((spr.y+16) < 288) && 
+	      (spr.x > -16) && (spr.x < 224)) {      
+	      // place a copy below the current one
+	      sprite[active_sprites] = spr;
+	      sprite[active_sprites].code += 3;
+	      sprite[active_sprites].y += 16;
+	      active_sprites++;
+      }
+	
+      // handle in both directions doubled sprites
+      if(((spr.flags & 0x0c) == 0x0c) &&
+	       ((spr.y+16) > -16) && ((spr.y+16) < 288) &&
+	       ((spr.x+16) > -16) && ((spr.x+16) < 224)) {
+	      // place a copy right and below the current one
+	      sprite[active_sprites] = spr;
+	      sprite[active_sprites].code += 1;
+	      sprite[active_sprites].x += 16;
+	      sprite[active_sprites].y += 16;
+	      active_sprites++;
+      }
+    }
+  }
+}
+
+// draw a single 8x8 tile
+static inline void galaga_blit_tile(short row, char col) {
+  unsigned short addr = tileaddr[row][col];
+
+  // skip blank galaga tiles (0x24) in rendering  
+  if(memory[addr] == 0x24) return;
+  
+  const unsigned short *tile = gg1_9_4l[memory[addr]];
+  const unsigned short *colors = galaga_colormap_tiles[memory[0x400 + addr] & 63];  
+
+  unsigned short *ptr = frame_buffer + 8*col;
+
+  // 8 pixel rows per tile
+  for(char r=0;r<8;r++,ptr+=(224-8)) {
+    unsigned short pix = *tile++;
+    // 8 pixel columns per tile
+    for(char c=0;c<8;c++,pix>>=2) {
+      if(pix & 3) *ptr = colors[pix&3];
+      ptr++;
+    }
+  }
+}
+
+// render a single 16x16 sprite. This is called multiple times for
+// double sized sprites. This renders onto a single 224 x 8 tile row
+// thus will be called multiple times even for single sized sprites
+static inline void galaga_blit_sprite(short row, unsigned char s) {
+  const unsigned long *spr = galaga_sprites[sprite[s].flags & 3][sprite[s].code];
+  const unsigned short *colors = galaga_colormap_sprites[sprite[s].color & 63];
+  if(colors[0] != 0) return;   // not a valid colormap entry
+
+  // create mask for sprites that clip left or right
+  unsigned long mask = 0xffffffff;
+  if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
+  if(sprite[s].x > 224-16) mask >>= (2*(sprite[s].x-(224-16)));		
+
+  short y_offset = sprite[s].y - 8*row;
+
+  // check if there are less than 8 lines to be drawn in this row
+  unsigned char lines2draw = 8;
+  if(y_offset < -8) lines2draw = 16+y_offset;
+
+  // check which sprite line to begin with
+  unsigned short startline = 0;
+  if(y_offset > 0) {
+    startline = y_offset;
+    lines2draw = 8 - y_offset;
+  }
+
+  // if we are not starting to draw with the first line, then
+  // skip into the sprite image
+  if(y_offset < 0)
+    spr -= y_offset;  
+
+  // calculate pixel lines to paint  
+  unsigned short *ptr = frame_buffer + sprite[s].x + 224*startline;
+  
+  // 16 pixel rows per sprite
+  for(char r=0;r<lines2draw;r++,ptr+=(224-16)) {
+    unsigned long pix = *spr++ & mask;
+    // 16 pixel columns per tile
+    for(char c=0;c<16;c++,pix>>=2) {
+      unsigned short col = colors[pix&3];
+      if(col) *ptr = col;
+      ptr++;
+    }
+  }
+}
+
+static void render_stars_set(short row, const struct galaga_star *set) {    
+  for(char star_cntr = 0;star_cntr < 63 ;star_cntr++) {
+    const struct galaga_star *s = set+star_cntr;
+
+    unsigned short x = (244 - s->x) & 0xff;
+    unsigned short y = ((s->y + stars_scroll_y) & 0xff) + 16 - row * 8;
+
+    if(y < 8 && x < 224)
+      frame_buffer[224*y + x] = s->col;
+  }     
+}
+
+static inline void galaga_render_row(short row) {
+  if(starcontrol & 0x20) {
+    /* two sets of stars controlled by these bits */
+    render_stars_set(row, galaga_star_set[(starcontrol & 0x08)?1:0]);
+    render_stars_set(row, galaga_star_set[(starcontrol & 0x10)?3:2]);
+  }
+  
+  // render sprites
+  for(unsigned char s=0;s<active_sprites;s++) {
+    // check if sprite is visible on this row
+    if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
+      galaga_blit_sprite(row, s);
+  }
+  
+  // render 28 tile columns per row
+  for(char col=0;col<28;col++)
+    galaga_blit_tile(row, col);
+} 
+
 #endif // IO_EMULATION

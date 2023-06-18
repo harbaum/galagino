@@ -19,6 +19,13 @@
 
 #define IO_EMULATION
 
+// the hardware supports 64 sprites
+unsigned char active_sprites = 0;
+struct sprite_S *sprite;
+
+// buffer space for one row of 28 characters
+unsigned short *frame_buffer;
+
 // include converted rom data
 #ifdef ENABLE_PACMAN
 #include "pacman.h"
@@ -47,18 +54,9 @@ signed char machine = MCH_MENU;   // start with menu
 // instance of main tft driver
 Video tft = Video();
 
-// buffer space for one row of 28 characters
-unsigned short *frame_buffer;
-
 TaskHandle_t emulationtask;
 
-// the hardware supports 64 sprites
-unsigned char active_sprites = 0;
-struct sprite_S *sprite;
-
 #ifdef ENABLE_GALAGA
-unsigned char stars_scroll_y = 0;
-
 // the ship explosion sound is stored as a digi sample.
 // All other sounds are generated on the fly via the
 // original wave tables
@@ -86,589 +84,6 @@ extern "C" void hw_reset(void);
 void hw_reset(void) {
   ESP.restart();
 }
-
-#ifdef ENABLE_PACMAN
-void pacman_prepare_frame(void) {
-  // Do all the preparations to render a screen.
-
-  /* preprocess sprites */
-  active_sprites = 0;
-  for(int idx=0;idx<8 && active_sprites<92;idx++) {
-    unsigned char *sprite_base_ptr = memory + 2*(7-idx);
-    struct sprite_S spr;     
-      
-    spr.code = sprite_base_ptr[0x0ff0] >> 2;
-    spr.color = sprite_base_ptr[0x0ff1] & 63;
-    spr.flags = sprite_base_ptr[0x0ff0] & 3;
-    
-    // adjust sprite position on screen for upright screen
-    spr.x = 255 - 16 - sprite_base_ptr[0x1060];
-    spr.y = 16 + 256 - sprite_base_ptr[0x1061];
-
-    if((spr.code < 64) &&
-       (spr.y > -16) && (spr.y < 288) &&
-       (spr.x > -16) && (spr.x < 224)) {      
-      
-      // save sprite in list of active sprites
-      sprite[active_sprites++] = spr;
-    }
-  }
-}
-#endif
-
-#ifdef ENABLE_GALAGA
-void galaga_prepare_frame(void) {
-  // Do all the preparations to render a screen.
-  
-  leds_state_reset();
-  
-  /* preprocess sprites */
-  active_sprites = 0;
-  for(int idx=0;idx<64 && active_sprites<92;idx++) {
-    unsigned char *sprite_base_ptr = memory + 2*(63-idx);
-    // check if sprite is visible
-    if ((sprite_base_ptr[0x1b80 + 1] & 2) == 0) {
-      struct sprite_S spr;     
-      
-      spr.code = sprite_base_ptr[0x0b80];
-      spr.color = sprite_base_ptr[0x0b80 + 1];
-      spr.flags = sprite_base_ptr[0x1b80];
-      spr.x = sprite_base_ptr[0x1380] - 16;
-      spr.y = sprite_base_ptr[0x1380 + 1] +
-	      0x100*(sprite_base_ptr[0x1b80 + 1] & 1) - 40;
-
-      if((spr.code < 128) &&
-    	   (spr.y > -16) && (spr.y < 288) &&
-	       (spr.x > -16) && (spr.x < 224)) {      
-
-#ifdef LED_PIN
-        leds_check_galaga_sprite(&spr);
-#endif
-
-    	  // save sprite in list of active sprites
-	      sprite[active_sprites] = spr;
-      	// for horizontally doubled sprites, this one becomes the code + 2 part
-	      if(spr.flags & 0x08) sprite[active_sprites].code += 2;	
-	      active_sprites++;
-      }
-
-      // handle horizontally doubled sprites
-      if((spr.flags & 0x08) &&
-    	   (spr.y > -16) && (spr.y < 288) &&
-    	   ((spr.x+16) >= -16) && ((spr.x+16) < 224)) {
-	      // place a copy right to the current one
-	      sprite[active_sprites] = spr;
-	      sprite[active_sprites].x += 16;
-	      active_sprites++;
-      }
-
-      // handle vertically doubled sprites
-      // (these don't seem to happen in galaga)
-      if((spr.flags & 0x04) &&
-	       ((spr.y+16) > -16) && ((spr.y+16) < 288) && 
-	      (spr.x > -16) && (spr.x < 224)) {      
-	      // place a copy below the current one
-	      sprite[active_sprites] = spr;
-	      sprite[active_sprites].code += 3;
-	      sprite[active_sprites].y += 16;
-	      active_sprites++;
-      }
-	
-      // handle in both directions doubled sprites
-      if(((spr.flags & 0x0c) == 0x0c) &&
-	       ((spr.y+16) > -16) && ((spr.y+16) < 288) &&
-	       ((spr.x+16) > -16) && ((spr.x+16) < 224)) {
-	      // place a copy right and below the current one
-	      sprite[active_sprites] = spr;
-	      sprite[active_sprites].code += 1;
-	      sprite[active_sprites].x += 16;
-	      sprite[active_sprites].y += 16;
-	      active_sprites++;
-      }
-    }
-  }
-}
-#endif
-
-#ifdef ENABLE_DKONG
-void dkong_prepare_frame(void) {
-  active_sprites = 0;
-  for(int idx=0;idx<96 && active_sprites<92;idx++) {
-    // sprites are stored at 0x7000
-    unsigned char *sprite_base_ptr = memory + 0x1000 + 4*idx;
-    struct sprite_S spr;     
-    
-    // adjust sprite position on screen for upright screen
-    spr.x = sprite_base_ptr[0] - 23;
-    spr.y = sprite_base_ptr[3] + 8;
-    
-    spr.code = sprite_base_ptr[1] & 0x7f;
-    spr.color = sprite_base_ptr[2] & 0x0f;
-    spr.flags =  ((sprite_base_ptr[2] & 0x80)?1:0) |
-      ((sprite_base_ptr[1] & 0x80)?2:0);
-
-    // save sprite in list of active sprites
-    if((spr.y > -16) && (spr.y < 288) &&
-       (spr.x > -16) && (spr.x < 224))
-      sprite[active_sprites++] = spr;
-  }
-}
-#endif
-
-#ifdef ENABLE_FROGGER
-void frogger_prepare_frame(void) {
-  active_sprites = 0;
-  // frogger supports a total of 8 sprites of 8x8 size
-  for(int idx=7;idx>=0 && active_sprites < 92;idx--) {
-    // sprites are stored at 0x0c40
-    unsigned char *sprite_base_ptr = memory + 0xc40 + 4*idx;
-    struct sprite_S spr;     
-
-    if(sprite_base_ptr[3]) {
-      spr.x = sprite_base_ptr[0];
-      spr.x = (((spr.x << 4) & 0xf0) | ((spr.x >> 4) & 0x0f)) - 16;
-      spr.y = sprite_base_ptr[3] + 16;
-      spr.color = sprite_base_ptr[2] & 7;
-      spr.color = ((spr.color >> 1) & 0x03) | ((spr.color << 2) & 0x04);
-      spr.code = sprite_base_ptr[1] & 0x3f;
-      spr.flags =  ((sprite_base_ptr[1] & 0x80)?1:0) | ((sprite_base_ptr[1] & 0x80)?2:0);
-
-      if((spr.y > -16) && (spr.y < 288) && (spr.x > -16) && (spr.x < 224))
-      	sprite[active_sprites++] = spr;
-    }    
-  }
-}
-#endif
-
-#ifdef ENABLE_DIGDUG
-void digdug_prepare_frame(void) {
-  // Do all the preparations to render a screen.
-  
-  /* preprocess sprites */
-  active_sprites = 0;
-  for(int idx=0;idx<64 && active_sprites<124;idx++) {
-    unsigned char *sprite_base_ptr = memory + 2*idx;
-    // check if sprite is visible
-    if ((sprite_base_ptr[0x1b80 + 1] & 2) == 0) {
-      struct sprite_S spr;     
-      
-      spr.code = sprite_base_ptr[0x0b80];
-      spr.color = sprite_base_ptr[0x0b80 + 1] & 0x3f;
-      spr.flags = sprite_base_ptr[0x1b80];
-      
-      // adjust sprite position on screen for upright screen
-      spr.x = sprite_base_ptr[0x1380] - 16;
-      spr.y = sprite_base_ptr[0x1380 + 1] - 40 + 1;
-      if(spr.y < 16) spr.y += 256;
-
-      if(sprite_base_ptr[0x0b80] & 0x80) {
-      	spr.flags |= 0x0c;
-      	spr.code = (spr.code & 0xc0) | ((spr.code & ~0xc0) << 2);
-      }
-
-      if((spr.y > -16) && (spr.y < 288) &&
-      	 (spr.x > -16) && (spr.x < 224)) {      
-
-      	// save sprite in list of active sprites
-      	sprite[active_sprites] = spr;
-	      // for horizontally doubled sprites, this one becomes the code + 2 part
-	      if(spr.flags & 0x08) sprite[active_sprites].code += 2;	
-	      active_sprites++;
-      }
-	
-      // handle horizontally doubled sprites
-      if((spr.flags & 0x08) &&
-      	 (spr.y > -16) && (spr.y < 288) &&
-	      ((spr.x+16) > -16) && ((spr.x+16) < 224)) {
-	      // place a copy right to the current one
-	      sprite[active_sprites] = spr;
-	      sprite[active_sprites].x += 16;
-	      active_sprites++;
-
-      	// on hflip swap both halfs
-	      if(spr.flags & 2) {
-	        int tmp = sprite[active_sprites-1].code;
-	        sprite[active_sprites-1].code = sprite[active_sprites-2].code;
-	        sprite[active_sprites-2].code = tmp;
-      	}
-      }
-
-      // handle vertically doubled sprites (these don't seem to happen
-      // in galaga)
-      if((spr.flags & 0x04) &&
-      	 ((spr.y+16) > -16) && ((spr.y+16) < 288) &&
-	        (spr.x > -16) && (spr.x < 224)) {      
-	      // place a copy below the current one
-	      sprite[active_sprites] = spr;
-	      sprite[active_sprites].code += 3;
-	      sprite[active_sprites].y += 16;
-	      active_sprites++;
-      }
-	
-      // handle in both directions doubled sprites
-      if(((spr.flags & 0x0c) == 0x0c) &&
-	      ((spr.y+16) > -16) && ((spr.y+16) < 288) &&
-	      ((spr.x+16) > -16) && ((spr.x+16) < 224)) {
-	      // place a copy right and below the current one
-	      sprite[active_sprites] = spr;
-	      sprite[active_sprites].code += 1;
-	      sprite[active_sprites].x += 16;
-	      sprite[active_sprites].y += 16;
-	      active_sprites++;
-	
-	      // on hflip swap both bottom halfs
-	      if(spr.flags & 2) {
-	        int tmp = sprite[active_sprites-1].code;
-	        sprite[active_sprites-1].code = sprite[active_sprites-2].code;
-	        sprite[active_sprites-2].code = tmp;
-      	}
-      }
-    }
-  }
-}
-#endif
-
-#ifdef ENABLE_GALAGA
-void render_stars_set(short row, const struct galaga_star *set) {    
-  for(char star_cntr = 0;star_cntr < 63 ;star_cntr++) {
-    const struct galaga_star *s = set+star_cntr;
-
-    unsigned short x = (244 - s->x) & 0xff;
-    unsigned short y = ((s->y + stars_scroll_y) & 0xff) + 16 - row * 8;
-
-    if(y < 8 && x < 224)
-      frame_buffer[224*y + x] = s->col;
-  }     
-}
-#endif
-
-// draw a single 8x8 tile
-void blit_tile(short row, char col) {
-  unsigned short addr = tileaddr[row][col];
-  const unsigned short *tile, *colors;
-
-#ifdef ENABLE_PACMAN
-PACMAN_BEGIN
-  {
-    tile = pacman_5e[memory[addr]];
-    colors = pacman_colormap[memory[0x400 + addr] & 63];
-  } 
-PACMAN_END  
-#endif
-  
-#ifdef ENABLE_GALAGA
-GALAGA_BEGIN
-  {
-    // skip blank galaga tiles (0x24) in rendering  
-    if(memory[addr] == 0x24) return;
-    tile = gg1_9_4l[memory[addr]];
-    colors = galaga_colormap_tiles[memory[0x400 + addr] & 63];  
-  } 
-GALAGA_END  
-#endif
-
-#ifdef ENABLE_DKONG
-DKONG_BEGIN
-  {
-    /* if(machine == MCH_DKONG) */
-    if((row < 2) || (row >= 34)) return;    
-    // skip blank dkong tiles (0x10) in rendering  
-    if(memory[0x1400 + addr] == 0x10) return;   
-    tile = v_5h_b_bin[memory[0x1400 + addr]];
-    // donkey kong has some sort of global color table
-    colors = dkong_colormap[colortable_select][row-2 + 32*(col/4)];
-  }
-DKONG_END
-#endif
-
-#ifdef ENABLE_FROGGER
-FROGGER_BEGIN
-  {
-    if((row < 2) || (row >= 34))
-      return;
-
-    tile = frogger_606[memory[0x0800 + addr]];
-
-    // frogger has a very reduced color handling
-    int c = memory[0xc00 + 2 * (addr & 31) + 1] & 7;
-    colors = frogger_colormap[((c >> 1) & 0x03) | ((c << 2) & 0x04)];
-  }
-FROGGER_END
-#endif
-
-  unsigned short *ptr = frame_buffer + 8*col;
-
-  // 8 pixel rows per tile
-  for(char r=0;r<8;r++,ptr+=(224-8)) {
-    unsigned short pix = *tile++;
-    // 8 pixel columns per tile
-    for(char c=0;c<8;c++,pix>>=2) {
-      if(pix & 3) *ptr = colors[pix&3];
-      ptr++;
-    }
-  }
-}
-
-#ifdef ENABLE_FROGGER
-// frogger can scroll single lines
-void blit_tile_scroll(short row, signed char col, short scroll) {
-  if((row < 2) || (row >= 34))
-    return;
-
-  unsigned short addr;
-  unsigned short mask = 0xffff;
-  int sub = scroll & 0x07;
-  if(col >= 0) {
-    addr = tileaddr[row][col];
-
-    // one tile (8 pixels) further is an address offset of 32
-    addr = (addr + ((scroll & ~7) << 2)) & 1023;
-
-    if((sub != 0) && (col == 27))
-      mask = 0xffff >> (2*sub);    
-  } else {
-    // negative column is a special case for the leftmost
-    // tile when it's only partly visible
-    addr = tileaddr[row][0];
-    addr = (addr + 32 + ((scroll & ~7) << 2)) & 1023;
-
-    mask = 0xffff << (2*(8-sub));
-  }
-    
-  const unsigned char chr = memory[0x0800 + addr];
-  const unsigned short *tile = frogger_606[chr];
-
-  // frogger has a very reduced color handling
-  int c = memory[0xc00 + 2 * (addr & 31) + 1] & 7;
-  const unsigned short *colors =
-    frogger_colormap[((c >> 1) & 0x03) | ((c << 2) & 0x04)];
-
-  unsigned short *ptr = frame_buffer + 8*col + sub;
-
-  // 8 pixel rows per tile
-  for(char r=0;r<8;r++,ptr+=(224-8)) {
-    unsigned short pix = *tile++ & mask;
-    // 8 pixel columns per tile
-    for(char c=0;c<8;c++,pix>>=2) {      
-      if(pix & 3) *ptr = colors[pix&3];
-      ptr++;      
-    }
-  }
-}
-#endif
-
-#ifdef ENABLE_DIGDUG
-unsigned char digdug_video_latch = 0x00;
-
-// digdug has two layers, a playfield and characters
-void blit_tile_dd(short row, char col) {
-  unsigned short addr = tileaddr[row][col];
-    
-  // the playfield rom contains four playfields.
-  // 0: normal one
-  // 1: cross pattern
-  // 2: funny logo
-  // 3: monocolor
-
-  unsigned char chr = digdug_playfield[addr + (digdug_video_latch&3)*0x400];
-  unsigned char color = chr >> 4;
-  const unsigned short *tile = dd1_11[chr];   // playfield
-
-  // colorprom contains 4*16 color groups
-  const unsigned short *colors =
-    digdug_colormap_tiles[(digdug_video_latch&0x30)+color];
-
-  chr = memory[addr];
-  // upper four bits point directly into the colormap
-  const unsigned short *fgtile = dd1_9[chr & 0x7f];
-  unsigned short fgcol = ((unsigned short*)digdug_colormaps)
-    [((chr >> 4) & 0x0e) | ((chr >> 3) & 2)];
-
-  // this mode is never used in digdug
-  if(digdug_video_latch & 4)
-    fgcol = ((unsigned short*)digdug_colormaps)[chr & 15];
-
-  unsigned short *ptr = frame_buffer + 8*col;
-
-  // 8 pixel rows per tile
-  for(char r=0;r<8;r++,ptr+=(224-8)) {
-    unsigned short bg_pix = *tile++;
-    unsigned short fg_pix = *fgtile++;
-    // 8 pixel columns per tile
-    for(char c=0;c<8;c++,bg_pix>>=2,fg_pix>>=2) {
-      if(!(digdug_video_latch & 8)) *ptr = colors[bg_pix&3];
-      if(fg_pix & 3) *ptr = *ptr = fgcol;
-      ptr++;
-    }
-  }
-}
-#endif
-
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
-// render a single 16x16 sprite. This is called multiple times for
-// double sized sprites. This renders onto a single 224 x 8 tile row
-// thus will be called multiple times even for single sized sprites
-void blit_sprite(short row, unsigned char s) {
-  const unsigned long *spr;
-  const unsigned short *colors;
-
-#ifdef ENABLE_PACMAN
-PACMAN_BEGIN
-  {
-    spr = pacman_sprites[sprite[s].flags & 3][sprite[s].code];
-    colors = pacman_colormap[sprite[s].color & 63];
-  }
-PACMAN_END
-#endif
-
-#ifdef ENABLE_GALAGA
-GALAGA_BEGIN
-  {
-    spr = galaga_sprites[sprite[s].flags & 3][sprite[s].code];
-    colors = galaga_colormap_sprites[sprite[s].color & 63];
-    if(colors[0] != 0) return;   // not a valid colormap entry
-  }
-GALAGA_END
-#endif
-
-#ifdef ENABLE_DIGDUG
-DIGDUG_BEGIN
-  {
-    spr = digdug_sprites[sprite[s].flags & 3][sprite[s].code];
-    colors = digdug_colormap_sprites[sprite[s].color & 63];
-    if(colors[0] != 0) return;   // not a valid colormap entry
-  }
-DIGDUG_END
-#endif
-
-  // create mask for sprites that clip left or right
-  unsigned long mask = 0xffffffff;
-  if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
-  if(sprite[s].x > 224-16) mask >>= (2*(sprite[s].x-(224-16)));		
-
-  short y_offset = sprite[s].y - 8*row;
-
-  // check if there are less than 8 lines to be drawn in this row
-  unsigned char lines2draw = 8;
-  if(y_offset < -8) lines2draw = 16+y_offset;
-
-  // check which sprite line to begin with
-  unsigned short startline = 0;
-  if(y_offset > 0) {
-    startline = y_offset;
-    lines2draw = 8 - y_offset;
-  }
-
-  // if we are not starting to draw with the first line, then
-  // skip into the sprite image
-  if(y_offset < 0)
-    spr -= y_offset;  
-
-  // calculate pixel lines to paint  
-  unsigned short *ptr = frame_buffer + sprite[s].x + 224*startline;
-  
-  // 16 pixel rows per sprite
-  for(char r=0;r<lines2draw;r++,ptr+=(224-16)) {
-    unsigned long pix = *spr++ & mask;
-    // 16 pixel columns per tile
-    for(char c=0;c<16;c++,pix>>=2) {
-      unsigned short col = colors[pix&3];
-      if(col) *ptr = col;
-      ptr++;
-    }
-  }
-}
-#endif
-
-#ifdef ENABLE_DKONG
-// dkong has its own sprite drawing routine since unlike the other
-// games, in dkong black is not always transparent. Black pixels
-// are instead used for masking
-void blit_sprite_dkong(short row, unsigned char s) {
-  const unsigned long *spr = dkong_sprites[sprite[s].flags & 3][sprite[s].code];
-  const unsigned short *colors = dkong_colormap_sprite[colortable_select][sprite[s].color];
-  
-  // create mask for sprites that clip left or right
-  unsigned long mask = 0xffffffff;
-  if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
-  if(sprite[s].x > 224-16) mask >>= 2*(sprite[s].x-224-16);    
-
-  short y_offset = sprite[s].y - 8*row;
-
-  // check if there are less than 8 lines to be drawn in this row
-  unsigned char lines2draw = 8;
-  if(y_offset < -8) lines2draw = 16+y_offset;
-
-  // check which sprite line to begin with
-  unsigned short startline = 0;
-  if(y_offset > 0) {
-    startline = y_offset;
-    lines2draw = 8 - y_offset;
-  }
-
-  // if we are not starting to draw with the first line, then
-  // skip into the sprite image
-  if(y_offset < 0)
-    spr -= y_offset;  
-
-  // calculate pixel lines to paint  
-  unsigned short *ptr = frame_buffer + sprite[s].x + 224*startline;
-  
-  // 16 pixel rows per sprite
-  for(char r=0;r<lines2draw;r++,ptr+=(224-16)) {
-    unsigned long pix = *spr++ & mask;
-    // 16 pixel columns per tile
-    for(char c=0;c<16;c++,pix>>=2) {
-      unsigned short col = colors[pix&3];
-      if(pix & 3) *ptr = col;
-      ptr++;
-    }
-  }
-}
-#endif
-
-#ifdef ENABLE_FROGGER
-void blit_sprite_frogger(short row, unsigned char s) {
-  const unsigned long *spr = frogger_sprites[sprite[s].flags & 3][sprite[s].code];
-  const unsigned short *colors = frogger_colormap[sprite[s].color];
-  
-  // create mask for sprites that clip left or right
-  unsigned long mask = 0xffffffff;
-  if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
-  if(sprite[s].x > 224-16) mask >>= 2*(sprite[s].x-224-16);		
-
-  short y_offset = sprite[s].y - 8*row;
-
-  // check if there are less than 8 lines to be drawn in this row
-  unsigned char lines2draw = 8;
-  if(y_offset < -8) lines2draw = 16+y_offset;
-
-  // check which sprite line to begin with
-  unsigned short startline = 0;
-  if(y_offset > 0) {
-    startline = y_offset;
-    lines2draw = 8 - y_offset;
-  }
-
-  // if we are not starting to draw with the first line, then
-  // skip into the sprite image
-  if(y_offset < 0) spr -= y_offset;  
-
-  // calculate pixel lines to paint  
-  unsigned short *ptr = frame_buffer + sprite[s].x + 224*startline;
-  
-  // 16 pixel rows per sprite
-  for(char r=0;r<lines2draw;r++,ptr+=(224-16)) {
-    unsigned long pix = *spr++ & mask;
-    // 16 pixel columns per tile
-    for(char c=0;c<16;c++,pix>>=2) {
-      unsigned short col = colors[pix&3];
-      if(pix & 3) *ptr = col;
-      ptr++;
-    }
-  }
-}
-#endif
 
 #ifndef SINGLE_MACHINE
 // convert rgb565 big endian color to greyscale
@@ -821,114 +236,31 @@ void render_line(short row) {
 
 #ifdef ENABLE_PACMAN
 PACMAN_BEGIN
-  {
-    // render 28 tile columns per row
-    for(char col=0;col<28;col++)
-      blit_tile(row, col);
-    
-    // render sprites
-    for(unsigned char s=0;s<active_sprites;s++) {
-      // check if sprite is visible on this row
-      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
-        blit_sprite(row, s);
-    }
-  }
+  pacman_render_row(row);
 PACMAN_END
 #endif
   
 #ifdef ENABLE_GALAGA
 GALAGA_BEGIN
-  {
-    if(starcontrol & 0x20) {
-      /* two sets of stars controlled by these bits */
-      render_stars_set(row, galaga_star_set[(starcontrol & 0x08)?1:0]);
-      render_stars_set(row, galaga_star_set[(starcontrol & 0x10)?3:2]);
-    }
-
-    // render sprites
-    for(unsigned char s=0;s<active_sprites;s++) {
-      // check if sprite is visible on this row
-      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
-        blit_sprite(row, s);
-    }
-
-    // render 28 tile columns per row
-    for(char col=0;col<28;col++)
-      blit_tile(row, col);
-  } 
+  galaga_render_row(row);
 GALAGA_END
 #endif
 
 #ifdef ENABLE_DKONG
 DKONG_BEGIN
-  {
-    // render 28 tile columns per row
-    for(char col=0;col<28;col++)
-        blit_tile(row, col);
-    
-    // render sprites
-    for(unsigned char s=0;s<active_sprites;s++) {
-      // check if sprite is visible on this row
-      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
-        blit_sprite_dkong(row, s);
-    }
-  }
+  dkong_render_row(row);
 DKONG_END
 #endif
 
 #ifdef ENABLE_FROGGER
 FROGGER_BEGIN
-  {
-    // don't render lines 0, 1, 34 and 35
-    if(row <= 1 || row >= 34) return;
-
-    // get scroll info for this row
-    unsigned char scroll = memory[0xc00 + 2 * (row - 2)];
-    scroll = ((scroll << 4) & 0xf0) | ((scroll >> 4) & 0x0f);
-
-    // in frogger scroll will only affect rows
-    // water:  8/ 9, 10/11, 12/13, 14/15, 16/17
-    // road:  20/21, 22/23, 24/25, 26/27, 28/29
-
-    // render 28 tile columns per row. Handle frogger specific
-    // scroll capabilities
-    if(scroll == 0) // no scroll in this line?
-      for(char col=0;col<28;col++)
-    	  blit_tile(row, col);
-    else {
-      // if scroll offset is multiple of 8, then
-      // 28 tiles are sufficient, otherwise the first
-      // fragment needs to be drawn
-      if(scroll & 7) 
-      	blit_tile_scroll(row, -1, scroll);
-
-      for(char col=0;col<28;col++)
-	      blit_tile_scroll(row, col, scroll);
-    }
-    // render sprites
-    for(unsigned char s=0;s<active_sprites;s++) {
-      // check if sprite is visible on this row
-      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
-	      blit_sprite_frogger(row, s);
-    }
-  }
+  frogger_render_row(row);
 FROGGER_END
 #endif
   
 #ifdef ENABLE_DIGDUG
 DIGDUG_BEGIN
-  {
-    // render 28 tile columns per row
-    for(char col=0;col<28;col++)
-      blit_tile_dd(row, col);
-      
-    // render sprites
-    for(unsigned char s=0;s<active_sprites;s++) {
-      // check if sprite is visible on this row
-      if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
-	      blit_sprite(row, s);
-    }
-  }
+  digdug_render_row(row);
 DIGDUG_END
 #endif
 }
@@ -942,7 +274,7 @@ void galaga_trigger_sound_explosion(void) {
 }
 #endif
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
+#ifdef USE_NAMCO_WAVETABLE
 static unsigned long snd_cnt[3] = { 0,0,0 };
 static unsigned long snd_freq[3];
 static const signed char *snd_wave[3];
@@ -1088,21 +420,11 @@ FROGGER_END
 #endif
 }
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
+#ifdef USE_NAMCO_WAVETABLE
 void audio_namco_waveregs_parse(void) {
 #ifndef SINGLE_MACHINE
-  if(0
-  #ifdef ENABLE_PACMAN
-    || (machine == MCH_PACMAN)
-  #endif
-  #ifdef ENABLE_GALAGA
-    || (machine == MCH_GALAGA)
-  #endif
-  #ifdef ENABLE_DIGDUG
-    || (machine == MCH_DIGDUG)
-  #endif
-  )
-#endif   
+  if(MACHINE_IS_PACMAN || MACHINE_IS_GALAGA || MACHINE_IS_DIGDUG)
+#endif
   {
     // parse all three wsg channels
     for(char ch=0;ch<3;ch++) {  

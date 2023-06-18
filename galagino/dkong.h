@@ -139,4 +139,109 @@ static inline void dkong_run_frame(void) {
 #include "dkong_sample_jump.h"
 #include "dkong_sample_stomp.h"
 
+static inline void dkong_prepare_frame(void) {
+  active_sprites = 0;
+  for(int idx=0;idx<96 && active_sprites<92;idx++) {
+    // sprites are stored at 0x7000
+    unsigned char *sprite_base_ptr = memory + 0x1000 + 4*idx;
+    struct sprite_S spr;     
+    
+    // adjust sprite position on screen for upright screen
+    spr.x = sprite_base_ptr[0] - 23;
+    spr.y = sprite_base_ptr[3] + 8;
+    
+    spr.code = sprite_base_ptr[1] & 0x7f;
+    spr.color = sprite_base_ptr[2] & 0x0f;
+    spr.flags =  ((sprite_base_ptr[2] & 0x80)?1:0) |
+      ((sprite_base_ptr[1] & 0x80)?2:0);
+
+    // save sprite in list of active sprites
+    if((spr.y > -16) && (spr.y < 288) &&
+       (spr.x > -16) && (spr.x < 224))
+      sprite[active_sprites++] = spr;
+  }
+}
+
+// draw a single 8x8 tile
+static inline void dkong_blit_tile(short row, char col) {
+  unsigned short addr = tileaddr[row][col];
+
+  if((row < 2) || (row >= 34)) return;    
+  // skip blank dkong tiles (0x10) in rendering  
+  if(memory[0x1400 + addr] == 0x10) return;   
+  const unsigned short *tile = v_5h_b_bin[memory[0x1400 + addr]];
+  // donkey kong has some sort of global color table
+  const unsigned short *colors = dkong_colormap[colortable_select][row-2 + 32*(col/4)];
+
+  unsigned short *ptr = frame_buffer + 8*col;
+
+  // 8 pixel rows per tile
+  for(char r=0;r<8;r++,ptr+=(224-8)) {
+    unsigned short pix = *tile++;
+    // 8 pixel columns per tile
+    for(char c=0;c<8;c++,pix>>=2) {
+      if(pix & 3) *ptr = colors[pix&3];
+      ptr++;
+    }
+  }
+}
+
+// dkong has its own sprite drawing routine since unlike the other
+// games, in dkong black is not always transparent. Black pixels
+// are instead used for masking
+static inline void dkong_blit_sprite(short row, unsigned char s) {
+  const unsigned long *spr = dkong_sprites[sprite[s].flags & 3][sprite[s].code];
+  const unsigned short *colors = dkong_colormap_sprite[colortable_select][sprite[s].color];
+  
+  // create mask for sprites that clip left or right
+  unsigned long mask = 0xffffffff;
+  if(sprite[s].x < 0)      mask <<= -2*sprite[s].x;
+  if(sprite[s].x > 224-16) mask >>= 2*(sprite[s].x-224-16);    
+
+  short y_offset = sprite[s].y - 8*row;
+
+  // check if there are less than 8 lines to be drawn in this row
+  unsigned char lines2draw = 8;
+  if(y_offset < -8) lines2draw = 16+y_offset;
+
+  // check which sprite line to begin with
+  unsigned short startline = 0;
+  if(y_offset > 0) {
+    startline = y_offset;
+    lines2draw = 8 - y_offset;
+  }
+
+  // if we are not starting to draw with the first line, then
+  // skip into the sprite image
+  if(y_offset < 0)
+    spr -= y_offset;  
+
+  // calculate pixel lines to paint  
+  unsigned short *ptr = frame_buffer + sprite[s].x + 224*startline;
+  
+  // 16 pixel rows per sprite
+  for(char r=0;r<lines2draw;r++,ptr+=(224-16)) {
+    unsigned long pix = *spr++ & mask;
+    // 16 pixel columns per tile
+    for(char c=0;c<16;c++,pix>>=2) {
+      unsigned short col = colors[pix&3];
+      if(pix & 3) *ptr = col;
+      ptr++;
+    }
+  }
+}
+
+static inline void dkong_render_row(short row) {
+  // render 28 tile columns per row
+  for(char col=0;col<28;col++)
+    dkong_blit_tile(row, col);
+  
+  // render sprites
+  for(unsigned char s=0;s<active_sprites;s++) {
+    // check if sprite is visible on this row
+    if((sprite[s].y < 8*(row+1)) && ((sprite[s].y+16) > 8*row))
+      dkong_blit_sprite(row, s);
+  }
+}
+
 #endif // IO_EMULATION
