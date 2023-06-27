@@ -559,6 +559,8 @@ void audio_init(void) {
 
 #ifdef SND_DIFF
   i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
+#elif defined(SND_LEFT_CHANNEL)
+  i2s_set_dac_mode(I2S_DAC_CHANNEL_LEFT_EN);
 #else
   i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
 #endif

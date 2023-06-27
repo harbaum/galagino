@@ -83,8 +83,9 @@
 #define LED_PIN 16        // pin used for optional WS2812 stripe
 #define LED_BRIGHTNESS 50 // range 0..255
 
-// audio config
+// audio config (leave both commented out for GPIO 25 for Audio)
 // #define SND_DIFF   // set to output differential audio on GPIO25 _and_ inverted on GPIO26
+#define SND_LEFT_CHANNEL // Use GPIO 26 for audio
 
 #define NUNCHUCK_INPUT
 
