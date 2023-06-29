@@ -58,6 +58,7 @@ SPI clock, Galagino will run at full 60Hz refresh.
 
 ## Hardware
 
+### Original Hardware
 The hardware is built around one of those cheap ESP32 development
 boards like the ESP32 Devkit V4 depicted in the images below. The
 components needed for the breadboard setup are listed below. If you
@@ -97,6 +98,18 @@ then be wired in the following way:
 ![Breadboard scheme with 5 way joystick](images/galagino_5way_bb.png)
 
 [PDF](images/galagino_5way_bb.pdf)
+
+### "Cheap Yellow Display"
+The ESP32-2432S028R A.K.A. the [Cheap Yellow Display](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display) is an ESP32 Board that comes with the majority of hardware required to build a Galagino device.
+
+Hardware Needed:
+- Cheap Yellow Display
+- [A Nintendo Wii nunchuck and adaptor](/hardware/NUNCHUCK.MD) - This can be connected to the JST connector labled "CN1" with the cable included with the display
+- A speaker - This can be attached to the display with a 1.25mm JST connector to the connector labled "SPEAK" (or soldered)
+
+Note: The `Start` button is connected to the "boot" button on the board.
+
+To get the project working on the Cheap Yellow Display, just uncomment the `#define CHEAP_YELLOW_DISPLAY_CONF` line in [galagino/config.h](galagino/config.h)
 
 ## Software
 
