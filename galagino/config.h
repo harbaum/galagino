@@ -95,7 +95,7 @@
 #define NUNCHUCK_MOVE_THRESHOLD 30 // This is the dead-zone for where minor movements on the stick will not be considered valid movements
 
 // Pins used for buttons
-#define BTN_START_PIN 0
+#define BTN_START_PIN 0 //This is the "boot" button
 // #define BTN_COIN_PIN 21 // if this is not defined, then start will act as coin & start
 
 #endif // #ifndef CHEAP_YELLOW_DISPLAY_CONF
