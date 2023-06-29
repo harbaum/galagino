@@ -30,3 +30,7 @@ The nunchuck can be enabled in 'conf.h' as follows
 ```
 
 Note: At time of writing the Start and optional Coin button are not enabled on the nunchuck and will still need to be wired to regular GPIO buttons
+
+## Software
+
+The nunchuck code requires an addtional library to be installed, [NintendoExtensionCtrl](https://github.com/dmadison/NintendoExtensionCtrl). It can be installed from the library manager.
