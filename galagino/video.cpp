@@ -23,12 +23,28 @@ static spi_device_interface_config_t if_cfg {
   .post_cb = NULL,
 };
 
-spi_bus_config_t bus_cfg {
-  .mosi_io_num = MOSI,
-  .miso_io_num = MISO,
-  .sclk_io_num = SCK,
-  .max_transfer_sz = 224*8*2,  // one complete 8x8 tile row at 16 bpp
-  .flags = SPICOMMON_BUSFLAG_MASTER,
+#if !defined(TFT_MISO) || !defined(TFT_MOSI) || !defined(TFT_SCLK)
+// At least one of the SPI pins is not defined, so we'll set that to default ESP32 SPI pins
+#ifndef TFT_MISO
+#define TFT_MISO MISO
+#endif
+
+#ifndef TFT_MOSI
+#define TFT_MOSI MOSI
+#endif
+
+#ifndef TFT_SCLK
+#define TFT_SCLK SCK
+#endif
+
+#endif
+
+spi_bus_config_t bus_cfg{
+    .mosi_io_num = TFT_MOSI,
+    .miso_io_num = TFT_MISO,
+    .sclk_io_num = TFT_SCLK,
+    .max_transfer_sz = 224 * 8 * 2, // one complete 8x8 tile row at 16 bpp
+    .flags = SPICOMMON_BUSFLAG_MASTER,
 };
 
 #define W16(a)    (a>>8), (a&0xff)    // store 16 bit parameter
@@ -108,11 +124,14 @@ Video::Video() {
   spi_bus_add_device(VSPI_HOST, &if_cfg, &handle);
 
   // trigger hardware reset
-  pinMode(TFT_RST, OUTPUT);
-  digitalWrite(TFT_RST, LOW);
-  delay(100);
-  digitalWrite(TFT_RST, HIGH);
-  delay(200);
+  if (TFT_RST >= 0)
+  {
+    pinMode(TFT_RST, OUTPUT);
+    digitalWrite(TFT_RST, LOW);
+    delay(100);
+    digitalWrite(TFT_RST, HIGH);
+    delay(200);
+  }
 }
 
 void Video::begin(void) {
