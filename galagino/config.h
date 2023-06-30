@@ -39,7 +39,7 @@
 #define TFT_RST 27
 #define TFT_BL  13    // don't set if backlight is hard wired
 #define TFT_ILI9341   // define for ili9341, otherwise st7789
-// #define TFT_VFLIP     // define for upside down
+#define TFT_VFLIP     // define for upside down
 
 // x and y offset of 224x288 pixels inside the 240x320 screen
 #define TFT_X_OFFSET  8

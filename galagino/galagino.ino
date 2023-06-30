@@ -696,7 +696,7 @@ void setup() {
 
 #ifdef NUNCHUCK_INPUT
   nunchuckSetup();
-#elif
+#else
   pinMode(BTN_LEFT_PIN, INPUT_PULLUP);
   pinMode(BTN_RIGHT_PIN, INPUT_PULLUP);
   pinMode(BTN_DOWN_PIN, INPUT_PULLUP);
