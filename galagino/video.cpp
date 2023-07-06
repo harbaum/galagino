@@ -39,6 +39,10 @@ static spi_device_interface_config_t if_cfg {
 
 #endif
 
+#ifndef TFT_MAC
+#define TFT_MAC 0x48
+#endif
+
 spi_bus_config_t bus_cfg{
     .mosi_io_num = TFT_MOSI,
     .miso_io_num = TFT_MISO,
@@ -63,9 +67,9 @@ static const uint8_t init_cmd[] = {
   0xC5, 2, 0x3e, 0x28,              // VCM control
   0xC7, 1, 0x86,                    // VCM control2
 #ifdef TFT_VFLIP
-  0x36, 1, 0x88,                    // Memory Access Control, upside down
+  0x36, 1, TFT_MAC^0xc0,            // Memory Access Control
 #else
-  0x36, 1, 0x48,                    // Memory Access Control, upside up
+  0x36, 1, TFT_MAC,                 // Memory Access Control, with x/y order reversed
 #endif
   0x37, 1, 0x00,                    // Vertical scroll zero
   0x3A, 1, 0x55,
@@ -131,6 +135,9 @@ Video::Video() {
     delay(100);
     digitalWrite(TFT_RST, HIGH);
     delay(200);
+  } else {
+    sendCommand(0x01, NULL, 0);
+    delay(150);
   }
 }
 
