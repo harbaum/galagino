@@ -75,7 +75,12 @@ if len(sys.argv) < 3:
     print("  Digdug CPU2:      ", sys.argv[0], "digdug_rom_cpu2 ../roms/dd1a.5 ../roms/dd1a.6 ../galagino/digdug_rom2.h")
     print("  Digdug CPU3:      ", sys.argv[0], "digdug_rom_cpu3 ../roms/dd1.7 ../galagino/digdug_rom3.h")
     print("  Digdug Playfield: ", sys.argv[0], "digdug_playfield ../roms/dd1.10b ../galagino/digdug_playfield.h")
-
+    print("  1942 CPU1:        ", sys.argv[0], "_1942_rom_cpu1 ../roms/srb-03.m3 ../roms/srb-04.m4 ../galagino/1942_rom1.h")
+    print("  1942 CPU1 bank 0: ", sys.argv[0], "_1942_rom_cpu1_b0 ../roms/srb-05.m5 ../galagino/1942_rom1_b0.h")
+    print("  1942 CPU1 bank 1: ", sys.argv[0], "_1942_rom_cpu1_b1 ../roms/srb-06.m6 ../galagino/1942_rom1_b1.h")
+    print("  1942 CPU1 bank 2: ", sys.argv[0], "_1942_rom_cpu1_b2 ../roms/srb-07.m7 ../galagino/1942_rom1_b2.h")
+    print("  1942 CPU2:        ", sys.argv[0], "_1942_rom_cpu2 ../roms/sr-01.c11 ../galagino/1942_rom2.h")
+    
     exit(-1)
 
 if sys.argv[1] == "-p":       
