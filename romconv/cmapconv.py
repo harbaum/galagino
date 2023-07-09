@@ -36,7 +36,7 @@ def parse_palette(name, name2=None):
         c = palette_data[idx]
         
         # palette_data may be an array of three files
-        if len(c) == 3:
+        if not isinstance(c, int) and len(c) == 3:
             # the proms contain 4 bit data
             # convert to rgb 565 (5 bit red, 6 bit green, 5 bit blue)
             r = c[0] << 1
