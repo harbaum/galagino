@@ -28,7 +28,7 @@ Files needed from the [Pac-Man (Midway)](https://www.bing.com/search?q=pacman+mi
 
 ## Galaga
 
-Files needed from the [Galaga Namco Rev. B ROM](https://www.bing.com/search?q=galaga+namco+b+rom) romset:
+Files needed from the [Galaga (Namco Rev. B ROM)](https://www.bing.com/search?q=galaga+namco+b+rom) romset:
 
 * ```gg1_1b.3p```, ```gg1_2b.3m```, ```gg1_3.2m``` and ```gg1_4b.2l``` - CPU1 rom
 * ```gg1_5b.3f``` - CPU2 rom
@@ -53,7 +53,7 @@ Files needed from the [Donkey Kong (US set 1)](https://www.bing.com/search?q=don
 
 ## Frogger
 
-Files needed from the [Frogger Konami](https://www.bing.com/search?q=frogger+konami+arcade+rom) romset:
+Files needed from the [Frogger (Konami)](https://www.bing.com/search?q=frogger+konami+arcade+rom) romset:
 
 * ```frogger.26```, ```frogger.27```, ```frsm3.7``` - CPU1 rom
 * ```frogger.608```, ```frogger.609```, ```frogger.610``` - CPU2 rom
@@ -62,7 +62,7 @@ Files needed from the [Frogger Konami](https://www.bing.com/search?q=frogger+kon
 
 ## Digdug
 
-Files needed from the [Digdug Namco](https://www.bing.com/search?q=digdug+namco+arcade+rom) romset:
+Files needed from the [Digdug (Namco)](https://www.bing.com/search?q=digdug+namco+arcade+rom) romset:
 
 * ```dd1a.1```, ```dd1a.2```, ```dd1a.3```, ```dd1a.4``` - CPU1 rom
 * ```dd1a.5```, ```dd1a.6``` - CPU2 rom
