@@ -7,6 +7,9 @@ Play Galaga, Pac-Man, Donkey Kong, Frogger, Digdug and 1942 on the ESP32
 ![Pac-Man screenshot](images/pacman.gif)
 ![Galaga screencast](images/galagino.gif)
 ![Donkey Kong screenshot](images/dkong.gif)
+![Frogger screenshot](images/frogger.png)
+![Digdug screenshot](images/digdug.png)
+![1942 screenshot](images/1942.png)
 
 [Pac-Man](https://en.wikipedia.org/wiki/Pac-Man),
 [Galaga](https://en.wikipedia.org/wiki/Galaga) and
