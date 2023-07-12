@@ -11,6 +11,7 @@ Z80.h
 *_spritemap.h
 *_cmap*.h
 *_wavetable.h
+*_charmap.h
 digdug_pftiles.h
 digdug_playfield.h  
 debug.cfg

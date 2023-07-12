@@ -1,5 +1,5 @@
 /*
- * galagino.ino - Galaga arcade for ESP32 and Arduino IDE
+ * Galagino.ino - Galaga arcade for ESP32 and Arduino IDE
  *
  * (c) 2023 Till Harbaum <till@harbaum.org>
  * 
@@ -51,6 +51,10 @@ unsigned short *frame_buffer;
 #include "digdug.h"
 #endif
 
+#ifdef ENABLE_1942
+#include "1942.h"
+#endif
+
 #ifndef SINGLE_MACHINE
 signed char machine = MCH_MENU;   // start with menu
 #endif
@@ -73,11 +77,12 @@ unsigned short dkong_sample_cnt[3] = { 0,0,0 };
 const signed char *dkong_sample_ptr[3];
 #endif
 
-#ifdef ENABLE_FROGGER
-int ay_period[3] = {0,0,0};
-int ay_volume[3] = {0,0,0};
-int ay_enable[3] = {0,0,0};
-int audio_cnt[3], audio_toggle[3] = {1,1,1};
+#if defined(ENABLE_FROGGER) || defined(ENABLE_1942)
+int ay_period[2][4] = {{0,0,0,0}, {0,0,0,0}};
+int ay_volume[2][3] = {{0,0,0}, {0,0,0}};
+int ay_enable[2][3] = {{0,0,0}, {0,0,0}};
+int audio_cnt[2][4], audio_toggle[2][4] = {{1,1,1,1},{1,1,1,1}};
+unsigned long ay_noise_rng[2] = { 1, 1 };
 extern unsigned char soundregs[];
 #endif
 
@@ -171,6 +176,9 @@ const unsigned short *logos[] = {
 #ifdef ENABLE_DIGDUG    
   digdug_logo,
 #endif
+#ifdef ENABLE_1942
+  _1942_logo,
+#endif
 };
 #endif
 
@@ -187,54 +195,54 @@ void render_line(short row) {
 #ifndef SINGLE_MACHINE
   if(machine == MCH_MENU) {
 
-#ifndef MENU_SCROLL
-    // non-scrolling menu for 2 or 3 machines
-    for(char i=0;i<sizeof(logos)/sizeof(unsigned short*);i++) {
-      char offset = i*12;
-      if(sizeof(logos)/sizeof(unsigned short*) == 2) offset += 6;
+    if(MACHINES <= 3) {    
+      // non-scrolling menu for 2 or 3 machines
+      for(char i=0;i<sizeof(logos)/sizeof(unsigned short*);i++) {
+      	char offset = i*12;
+	      if(sizeof(logos)/sizeof(unsigned short*) == 2) offset += 6;
+	
+	      if(row >= offset && row < offset+12)  
+	        render_logo(8*(row-offset), logos[i], menu_sel == i+1);
+      }
+    } else {
+      // scrolling menu for more than 3 machines
+    
+      // valid offset values range from 0 to MACHINE*96-1
+      static int offset = 0;
+
+      // check which logo would show up in this row. Actually
+      // two may show up in the same character row when scrolling
+      int logo_idx = ((row + offset/8) / 12)%MACHINES;
+      if(logo_idx < 0) logo_idx += MACHINES;
       
-      if(row >= offset && row < offset+12)  
-        render_logo(8*(row-offset), logos[i], menu_sel == i+1);
-    }
-#else // MENU_SCROLL
-    // scrolling menu for more than 3 machines
-    
-    // valid offset values range from 0 to MACHINE*96-1
-    static int offset = 0;
-
-    // check which logo would show up in this row. Actually
-    // two may show up in the same character row when scrolling
-    int logo_idx = ((row + offset/8) / 12)%MACHINES;
-    if(logo_idx < 0) logo_idx += MACHINES;
-    
-    int logo_y = (row * 8 + offset)%96;  // logo line in this row
-
-    // check if logo at logo_y shows up in current row
-    render_logo(logo_y, logos[logo_idx], (menu_sel-1) == logo_idx);
-
-    // check if a second logo may show up here
-    if(logo_y > (96-8)) {
+      int logo_y = (row * 8 + offset)%96;  // logo line in this row
+      
+      // check if logo at logo_y shows up in current row
+      render_logo(logo_y, logos[logo_idx], (menu_sel-1) == logo_idx);
+      
+      // check if a second logo may show up here
+      if(logo_y > (96-8)) {
         logo_idx = (logo_idx + 1)%MACHINES;
         logo_y -= 96;
         render_logo(logo_y, logos[logo_idx], (menu_sel-1) == logo_idx);
-    }
-    
-    if(row == 35) {
-      // finally offset is bound to game, something like 96*game:    
-      int new_offset = 96*((unsigned)(menu_sel-2)%MACHINES);
-      if(menu_sel == 1) new_offset = (MACHINES-1)*96;
-
-      // check if we need to scroll
-      if(new_offset != offset) {
-        int diff = (new_offset - offset) % (MACHINES*96);
-        if(diff < 0) diff += MACHINES*96;
-  
-        if(diff < MACHINES*96/2) offset = (offset+8)%(MACHINES*96);
-        else                     offset = (offset-8)%(MACHINES*96);
-        if(offset < 0) offset += MACHINES*96;
       }
-    }  
-#endif
+      
+      if(row == 35) {
+      	// finally offset is bound to game, something like 96*game:    
+	      int new_offset = 96*((unsigned)(menu_sel-2)%MACHINES);
+	      if(menu_sel == 1) new_offset = (MACHINES-1)*96;
+	
+	      // check if we need to scroll
+	      if(new_offset != offset) {
+	        int diff = (new_offset - offset) % (MACHINES*96);
+	        if(diff < 0) diff += MACHINES*96;
+	  
+	        if(diff < MACHINES*96/2) offset = (offset+8)%(MACHINES*96);
+	        else                     offset = (offset-8)%(MACHINES*96);
+	        if(offset < 0) offset += MACHINES*96;
+      	}
+      }
+    }
   } else
 #endif  
 
@@ -267,6 +275,12 @@ DIGDUG_BEGIN
   digdug_render_row(row);
 DIGDUG_END
 #endif
+
+#ifdef ENABLE_1942
+_1942_BEGIN
+  _1942_render_row(row);
+_1942_END
+#endif
 }
   
 #ifdef ENABLE_GALAGA
@@ -292,29 +306,45 @@ static unsigned short snd_buffer[64];  // buffer space for a single channel
 #endif
 
 void snd_render_buffer(void) {
+#if defined(ENABLE_FROGGER) || defined(ENABLE_1942)
+  #ifndef ENABLE_1942        // only frogger
+    #define AY        1      // frogger has one AY
+    #define AY_INC    9      // and it runs at 1.78 MHz -> 223718/24000 = 9,32
+    #define AY_VOL   11      // min/max = -/+ 3*15*11 = -/+ 495
+  #else
+    #ifndef ENABLE_FROGGER   // only 1942  
+      #define AY      2      // 1942 has two AYs
+      #define AY_INC  8      // and they runs at 1.5 MHz -> 187500/24000 = 7,81
+      #define AY_VOL 10      // min/max = -/+ 6*15*11 = -/+ 990
+    #else
+      // both enabled
+      #define AY ((machine == MCH_FROGGER)?1:2)
+      #define AY_INC ((machine == MCH_FROGGER)?9:8)
+      #define AY_VOL ((machine == MCH_FROGGER)?11:10)
+    #endif
+  #endif
+  
+  if(
 #ifdef ENABLE_FROGGER
-#ifndef SINGLE_MACHINE
-  if(machine == MCH_FROGGER)
+     MACHINE_IS_FROGGER ||
 #endif
-  {
-    // check if soundregisters have changed
-    char same = 1;
-    for(char i=0;i<14;i++)
-      if(soundregs[i] != soundregs[16+i])
-      	same = 0;
+#ifdef ENABLE_1942
+     MACHINE_IS_1942 ||
+#endif
+     0) {
 
-    if(!same) {
-      // recalc audio state
-      for(char c=0;c<3;c++) {	
-      	ay_period[c] = soundregs[2*c] + 256 * (soundregs[2*c+1] & 15);
-	      ay_enable[c] = !(soundregs[7] & (1<<c));
-      	ay_volume[c] = soundregs[8+c] & 0x0f;
+    // up to two AY's
+    for(char ay=0;ay<AY;ay++) {
+      int ay_off = 16*ay;
 
-        // printf("AY %d %d\n", c, ay_period[c]);
+      // three tone channels
+      for(char c=0;c<3;c++) {
+	ay_period[ay][c] = soundregs[ay_off+2*c] + 256 * (soundregs[ay_off+2*c+1] & 15);
+	ay_enable[ay][c] = (((soundregs[ay_off+7] >> c)&1) | ((soundregs[ay_off+7] >> (c+2))&2))^3;
+	ay_volume[ay][c] = soundregs[ay_off+8+c] & 0x0f;
       }
-
-      for(char i=0;i<14;i++)
-	      soundregs[16+i] = soundregs[i];
+      // noise channel
+      ay_period[ay][3] = soundregs[ay_off+6] & 0x1f;
     }
   }
 #endif
@@ -376,24 +406,51 @@ DKONG_BEGIN
 DKONG_END
 #endif
 
+#if defined(ENABLE_FROGGER) || defined(ENABLE_1942)
+    if(
 #ifdef ENABLE_FROGGER
-FROGGER_BEGIN
-    {
-      v = 0;  // silence
+     MACHINE_IS_FROGGER ||
+#endif
+#ifdef ENABLE_1942
+     MACHINE_IS_1942 ||
+#endif
+     0) {
+    v = 0;  // silence
+    
+    for(char ay=0;ay<AY;ay++) {
 
-      for(char c=0;c<3;c++) {      
+      // frogger can acually skip the noise generator as
+      // it doesn't use it      
+      if(ay_period[ay][3]) {
+	      // process noise generator
+	      audio_cnt[ay][3] += AY_INC; // for 24 khz
+	      if(audio_cnt[ay][3] > ay_period[ay][3]) {
+	        audio_cnt[ay][3] -=  ay_period[ay][3];
+	        // progress rng
+	        ay_noise_rng[ay] ^= (((ay_noise_rng[ay] & 1) ^ ((ay_noise_rng[ay] >> 3) & 1)) << 17);
+	        ay_noise_rng[ay] >>= 1;
+	      }
+      }
+	
+      for(char c=0;c<3;c++) {
 	      // a channel is on if period != 0, vol != 0 and tone bit == 0
-	      if(ay_period[c] && ay_volume[c] && ay_enable[c]) {
-	        v += 11 * audio_toggle[c] * ay_volume[c];  // min/max = -/+ 45*11 = -/+ 495
-	        audio_cnt[c] += 9; // for 24 khz
-	        if(audio_cnt[c] > ay_period[c]) {
-	          audio_cnt[c] -= ay_period[c];
-	          audio_toggle[c] = -audio_toggle[c];
+	      if(ay_period[ay][c] && ay_volume[ay][c] && ay_enable[ay][c]) {
+	        short bit = 1;
+	        if(ay_enable[ay][c] & 1) bit &= (audio_toggle[ay][c]>0)?1:0;  // tone
+	        if(ay_enable[ay][c] & 2) bit &= (ay_noise_rng[ay]&1)?1:0;     // noise
+	  
+	        if(bit == 0) bit = -1;
+	        v += AY_VOL * bit * ay_volume[ay][c];
+	  
+	        audio_cnt[ay][c] += AY_INC; // for 24 khz
+	        if(audio_cnt[ay][c] > ay_period[ay][c]) {
+	          audio_cnt[ay][c] -= ay_period[ay][c];
+	          audio_toggle[ay][c] = -audio_toggle[ay][c];
 	        }
-        }
+	      }
       }
     }
-FROGGER_END
+    }
 #endif
     // v is now in the range of +/- 512, so expand to +/- 15 bit
     v = v*64;
@@ -427,8 +484,18 @@ FROGGER_END
 #ifdef USE_NAMCO_WAVETABLE
 void audio_namco_waveregs_parse(void) {
 #ifndef SINGLE_MACHINE
-  if(MACHINE_IS_PACMAN || MACHINE_IS_GALAGA || MACHINE_IS_DIGDUG)
+  if(
+#ifdef ENABLE_PACMAN
+    MACHINE_IS_PACMAN ||
+#endif    
+#ifdef ENABLE_GALAGA    
+    MACHINE_IS_GALAGA ||
 #endif
+#ifdef ENABLE_DIGDUG    
+    MACHINE_IS_DIGDUG ||
+#endif
+  0) 
+#endif  
   {
     // parse all three wsg channels
     for(char ch=0;ch<3;ch++) {  
@@ -536,7 +603,11 @@ void audio_init(void) {
   // 24 kHz @ 16 bit = 48000 bytes/sec = 800 bytes per 60hz game frame =
   // 1600 bytes per 30hz screen update = ~177 bytes every four tile rows
   static const i2s_config_t i2s_config = {
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#warning "Fix audio on ESP32 S3"    
+#else
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN),
+#endif
     .sample_rate = 24000,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
 #ifdef SND_DIFF
@@ -557,12 +628,16 @@ void audio_init(void) {
   audio_dkong_bitrate(true);
 #endif
 
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#warning "Fix audio on ESP32 S3"    
+#else
 #ifdef SND_DIFF
   i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
 #elif defined(SND_LEFT_CHANNEL)
   i2s_set_dac_mode(I2S_DAC_CHANNEL_LEFT_EN);
 #else
   i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
+#endif
 #endif
 }
 
@@ -597,6 +672,12 @@ FROGGER_END
 DIGDUG_BEGIN
   digdug_prepare_frame();
 DIGDUG_END
+#endif
+
+#ifdef ENABLE_1942
+_1942_BEGIN
+  _1942_prepare_frame();
+_1942_END
 #endif
 
   // max possible video rate:
@@ -705,7 +786,7 @@ void setup() {
 #endif
 
   // initialize audio to default bitrate (24khz unless dkong is
-  // the inly game installed, then audio will directly be 
+  // the only game installed, then audio will directly be 
   // initialized to dkongs 11765hz)
   audio_init();
 

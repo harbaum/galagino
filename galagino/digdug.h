@@ -59,19 +59,19 @@ static inline void digdug_WrZ80(unsigned short Addr, unsigned char Value) {
   if((Addr & 0xfff8) == 0x6820) {
     if((Addr & 0x0c) == 0x00) {
       if((Addr & 3) < 3) {
-	irq_enable[Addr & 3] = Value & 1;
+      	irq_enable[Addr & 3] = Value & 1;
       } else {
-	sub_cpu_reset = !Value;
+	      sub_cpu_reset = !Value;
 	
-	if(sub_cpu_reset) {
-	  // this also resets the 51xx
-	  namco_command = 0x00;
-	  namco_mode = 0;
-	  namco_nmi_counter = 0;
+    	  if(sub_cpu_reset) {
+	        // this also resets the 51xx
+	        namco_command = 0x00;
+	        namco_mode = 0;
+	        namco_nmi_counter = 0;
 	  
-	  current_cpu = 1; ResetZ80(&cpu[1]);
-	  current_cpu = 2; ResetZ80(&cpu[2]);
-	}
+	        current_cpu = 1; ResetZ80(&cpu[1]);
+	        current_cpu = 2; ResetZ80(&cpu[2]);
+      	}
       }
     }
     return;
@@ -101,14 +101,14 @@ static inline void digdug_WrZ80(unsigned short Addr, unsigned char Value) {
 static inline void digdug_run_frame(void) {
   for(char c=0;c<4;c++) {    
     for(int i=0;i<INST_PER_FRAME/4;i++) {
-      current_cpu = 0;
-      StepZ80(cpu); StepZ80(cpu); StepZ80(cpu); StepZ80(cpu);
+      current_cpu = 0; 
+      StepZ80(cpu); digdug_StepZ80(cpu); digdug_StepZ80(cpu); digdug_StepZ80(cpu);
       if(!sub_cpu_reset) {
         // running both sub-cpus at full speed as well makes the setup instable :-(
-        current_cpu = 1;
-        StepZ80(cpu+1); StepZ80(cpu+1); StepZ80(cpu+1); StepZ80(cpu+1);       
+        current_cpu = 1; 
+        StepZ80(cpu+1); digdug_StepZ80(cpu+1); digdug_StepZ80(cpu+1); digdug_StepZ80(cpu+1);
         current_cpu = 2;
-        StepZ80(cpu+2); StepZ80(cpu+2); StepZ80(cpu+2); StepZ80(cpu+2);       
+        StepZ80(cpu+2); digdug_StepZ80(cpu+2); digdug_StepZ80(cpu+2); digdug_StepZ80(cpu+2);
       }
 
       // nmi counter for cpu0
@@ -139,6 +139,7 @@ static inline void digdug_run_frame(void) {
     IntZ80(&cpu[1], INT_RST38);
   }
 }
+
 #endif // CPU_EMULATION
 
 #ifdef IO_EMULATION

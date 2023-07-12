@@ -24,6 +24,7 @@
 #endif
 
 extern void StepZ80(Z80 *R);
+extern void digdug_StepZ80(Z80 *R);
 Z80 cpu[3];    // up to three z80 supported
 
 unsigned char *memory;
@@ -32,7 +33,7 @@ char game_started = 0;
 char current_cpu = 0;
 char irq_enable[3] = { 0,0,0 };
 
-#if defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG)
+#if defined(ENABLE_GALAGA) || defined(ENABLE_DIGDUG) || defined(ENABLE_1942)
 char sub_cpu_reset = 1;
 #endif
 
@@ -97,7 +98,7 @@ unsigned long master_attract_timeout = 0;
 
 #endif
 
-#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_FROGGER) || defined(ENABLE_DIGDUG)
+#if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_FROGGER) || defined(ENABLE_DIGDUG) || defined(ENABLE_1942)
 // mirror of sounds registers
 unsigned char soundregs[32] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -224,6 +225,10 @@ unsigned char namco_read_dd(unsigned short Addr) {
 #include "digdug.h"
 #endif
 
+#ifdef ENABLE_1942
+#include "1942.h"
+#endif
+
 
 void OutZ80(unsigned short Port, unsigned char Value) {
 #ifdef ENABLE_PACMAN
@@ -252,92 +257,214 @@ unsigned char InZ80(unsigned short Port) {
 
 // Memory write -- write the Value to memory location Addr
 void WrZ80(unsigned short Addr, unsigned char Value) {
+#if 0
+  // jump table
+  const void (*wrz80[])(unsigned short, unsigned char) = {
+     0,
+#ifdef ENABLE_PACMAN
+     pacman_WrZ80,
+#endif
+#ifdef ENABLE_GALAGA
+     galaga_WrZ80,
+#endif
+#ifdef ENABLE_DKONG
+     dkong_WrZ80,
+#endif
+#ifdef ENABLE_FROGGER
+     frogger_WrZ80,
+#endif
+#ifdef ENABLE_DIGDUG
+     digdug_WrZ80,
+#endif
+#ifdef ENABLE_1942
+     _1942_WrZ80,
+#endif   						    
+    };
+
+  (*(wrz80[machine]))(Addr, Value);
+  
+#else
+  // digdug is very timing critical and gets a special
+  // treatment
+#ifdef ENABLE_DIGDUG
+  if(MACHINE_IS_DIGDUG) {
+    digdug_WrZ80(Addr, Value);
+    return;
+  } 
+#endif
+
 #ifndef SINGLE_MACHINE
   switch(machine) {
+#endif
+
+#ifdef ENABLE_PACMAN
+#ifndef SINGLE_MACHINE
     case MCH_PACMAN:
 #endif
-#ifdef ENABLE_PACMAN
       pacman_WrZ80(Addr, Value);
       return;
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+      
+#ifdef ENABLE_GALAGA
+#ifndef SINGLE_MACHINE
     case MCH_GALAGA:
 #endif
-#ifdef ENABLE_GALAGA
       galaga_WrZ80(Addr, Value);
       return;
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+      
+#ifdef ENABLE_DKONG
+#ifndef SINGLE_MACHINE
     case MCH_DKONG:
 #endif
-#ifdef ENABLE_DKONG
       dkong_WrZ80(Addr, Value);
       return;
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+      
+#ifdef ENABLE_FROGGER
+#ifndef SINGLE_MACHINE
     case MCH_FROGGER:
 #endif
-#ifdef ENABLE_FROGGER
       frogger_WrZ80(Addr, Value);
       return;
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+
+#ifdef ENABLE_DIGDUG
+#ifndef SINGLE_MACHINE
     case MCH_DIGDUG:
 #endif
-#ifdef ENABLE_DIGDUG
       digdug_WrZ80(Addr, Value);
+      return;
+#endif
+#ifndef SINGLE_MACHINE
+      break;
+#endif
+      
+#ifdef ENABLE_1942
+#ifndef SINGLE_MACHINE
+    case MCH_1942:
+#endif
+      _1942_WrZ80(Addr, Value);
       return;
 #endif
 #ifndef SINGLE_MACHINE
       break;
   }
 #endif
+#endif
 }
 
 unsigned char RdZ80(unsigned short Addr) {
+#if 0
+  // jump table
+  const unsigned char (*rdz80[])(unsigned short) = {
+     0,
+#ifdef ENABLE_PACMAN
+     pacman_RdZ80,
+#endif
+#ifdef ENABLE_GALAGA
+     galaga_RdZ80,
+#endif
+#ifdef ENABLE_DKONG
+     dkong_RdZ80,
+#endif
+#ifdef ENABLE_FROGGER
+     frogger_RdZ80,
+#endif
+#ifdef ENABLE_DIGDUG
+     digdug_RdZ80,
+#endif
+#ifdef ENABLE_1942
+     _1942_RdZ80,
+#endif                   
+    };
+  return (*(rdz80[machine]))(Addr);
+  
+#else
+
+  // fast treatment for Digdug as it's quite
+  // performance sensitive
+#ifdef ENABLE_DIGDUG
+  if(MACHINE_IS_DIGDUG) return digdug_RdZ80(Addr);
+#endif
+
 #ifndef SINGLE_MACHINE
   switch(machine) {
+#endif   
+
+#ifdef ENABLE_PACMAN
+#ifndef SINGLE_MACHINE
     case MCH_PACMAN:
 #endif
-#ifdef ENABLE_PACMAN
       return pacman_RdZ80(Addr);
 #endif
 #ifndef SINGLE_MACHINE
       break;
-    case MCH_GALAGA:
 #endif
+      
 #ifdef ENABLE_GALAGA
+#ifndef SINGLE_MACHINE
+    case MCH_GALAGA:
+#endif    
       return galaga_RdZ80(Addr);
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+      
+#ifdef ENABLE_DKONG
+#ifndef SINGLE_MACHINE
     case MCH_DKONG:
 #endif
-#ifdef ENABLE_DKONG
       return dkong_RdZ80(Addr);
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+      
+#ifdef ENABLE_FROGGER
+#ifndef SINGLE_MACHINE
     case MCH_FROGGER:
 #endif
-#ifdef ENABLE_FROGGER
       return frogger_RdZ80(Addr);
 #endif
 #ifndef SINGLE_MACHINE
       break;
+#endif
+      
+#ifdef ENABLE_DIGDUG
+#ifndef SINGLE_MACHINE
     case MCH_DIGDUG:
 #endif
-#ifdef ENABLE_DIGDUG
       return digdug_RdZ80(Addr);
+#endif
+#ifndef SINGLE_MACHINE
+      break;
+#endif
+      
+#ifdef ENABLE_1942
+#ifndef SINGLE_MACHINE
+    case MCH_1942:
+#endif
+      return _1942_RdZ80(Addr);
 #endif
 #ifndef SINGLE_MACHINE
       break;
   }
   return 0xff;
+#endif
 #endif
 }
 
@@ -418,9 +545,16 @@ unsigned char i8048_xdm_read(struct i8048_state_S *state, unsigned char addr) {
 //}
 #endif
 
+
+#ifdef ENABLE_1942
+#define RAMSIZE   (8192 + 1024 + 128)
+#else
+#define RAMSIZE   (8192)
+#endif
+
 void prepare_emulation(void) {
-  memory = malloc(8192);
-  memset(memory, 0, 8192);
+  memory = malloc(RAMSIZE);
+  memset(memory, 0, RAMSIZE);
 
 #if defined(MASTER_ATTRACT_MENU_TIMEOUT) && !defined(SINGLE_MACHINE)
   master_attract_timeout = millis();
@@ -432,13 +566,13 @@ void prepare_emulation(void) {
 
 #ifdef ENABLE_DKONG
   i8048_reset(&cpu_8048);
-#endif      
+#endif       
 }
 
 void emulate_frame(void) {
   unsigned long sof = micros();
   current_cpu = 0;
-  
+
 #ifndef SINGLE_MACHINE
   if(machine == MCH_MENU) {
     static unsigned char last_mask = 0;
@@ -469,13 +603,13 @@ void emulate_frame(void) {
 #endif
     }
 
-#ifndef MENU_SCROLL
-    if(menu_sel < 1)         menu_sel = 1;
-    if(menu_sel > MACHINES)  menu_sel = MACHINES;
-#else
-    if(menu_sel < 1)         menu_sel = MACHINES;
-    if(menu_sel > MACHINES)  menu_sel = 1;
-#endif
+    if(MACHINES <= 3) {
+      if(menu_sel < 1)         menu_sel = 1;
+      if(menu_sel > MACHINES)  menu_sel = MACHINES;
+    } else {
+      if(menu_sel < 1)         menu_sel = MACHINES;
+      if(menu_sel > MACHINES)  menu_sel = 1;
+    }
       
     last_mask = keymask;
 
@@ -528,6 +662,12 @@ FROGGER_END
 DIGDUG_BEGIN
   digdug_run_frame();
 DIGDUG_END 
+#endif  
+
+#ifdef ENABLE_1942
+_1942_BEGIN
+  _1942_run_frame();
+_1942_END 
 #endif  
 
   sof = micros() - sof;

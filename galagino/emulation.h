@@ -37,6 +37,9 @@ enum {
 #ifdef ENABLE_DIGDUG
       MCH_DIGDUG,
 #endif
+#ifdef ENABLE_1942
+      MCH_1942,
+#endif
       MCH_LAST
 };
 
@@ -68,8 +71,8 @@ enum {
     #define MACHINE_IS_GALAGA  (machine == MCH_GALAGA)
     // galaga is not the first if pacman is enabled
     #ifdef ENABLE_PACMAN
-      // donkey kong, frogger or digdug may come afterwards
-      #if defined(ENABLE_DKONG) || defined(ENABLE_FROGGER) || defined(ENABLE_DIGDUG)     
+      // donkey kong, frogger, digdug or 1942 may come afterwards
+      #if defined(ENABLE_DKONG) || defined(ENABLE_FROGGER) || defined(ENABLE_DIGDUG) || defined(ENABLE_1942)
         #define GALAGA_BEGIN  else if(machine == MCH_GALAGA) {
       #else
         #define GALAGA_BEGIN  else {
@@ -90,8 +93,8 @@ enum {
     #define MACHINE_IS_DKONG  (machine == MCH_DKONG)
     // dkong is not the first if pacman or galaga are enabled
     #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
-      // frogger or digdug may come afterwards
-      #if defined(ENABLE_FROGGER) || defined(ENABLE_DIGDUG)
+      // frogger, digdug or 1942 may come afterwards
+      #if defined(ENABLE_FROGGER) || defined(ENABLE_DIGDUG) || defined(ENABLE_1942)
         #define DKONG_BEGIN  else if(machine == MCH_DKONG) {
       #else
         #define DKONG_BEGIN  else {
@@ -112,8 +115,8 @@ enum {
     #define MACHINE_IS_FROGGER  (machine == MCH_FROGGER)
     // frogger is not the first if pacman, galaga or dkong are enabled
     #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DKONG)
-      // digdug may come afterwards
-      #if defined(ENABLE_DIGDUG)
+      // digdug or 1942 may come afterwards
+      #if defined(ENABLE_DIGDUG) || defined(ENABLE_1942)
         #define FROGGER_BEGIN  else if(machine == MCH_FROGGER) {
       #else
         #define FROGGER_BEGIN  else {
@@ -132,19 +135,32 @@ enum {
     #define DIGDUG_END
   #else
     #define MACHINE_IS_DIGDUG  (machine == MCH_DIGDUG)
-    // digdug is never first and always last
-    #define DIGDUG_BEGIN  else {
-    #define DIGDUG_END    }
+    // digdug is not the first if pacman, galaga, dkong or frogger are enabled
+    #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA) || defined(ENABLE_DKONG) || defined(ENABLE_FROGGER)
+      // 1942 may come afterwards
+      #if defined(ENABLE_1942)
+        #define DIGDUG_BEGIN  else if(machine == MCH_DIGDUG) {
+      #else
+        #define DIGDUG_BEGIN  else {
+      #endif
+    #else
+      #define DIGDUG_BEGIN  if(machine == MCH_DIGDUG) {
+    #endif
+    #define DIGDUG_END    } 
   #endif
 #endif
 
-// scolling menu is needed whenever more than 3 machies are enabled
-#if (defined(ENABLE_PACMAN) && defined(ENABLE_GALAGA) && defined(ENABLE_DKONG) && defined(ENABLE_FROGGER)) || \
-    (defined(ENABLE_PACMAN) && defined(ENABLE_GALAGA) && defined(ENABLE_DKONG) && defined(ENABLE_DIGDUG))  || \
-    (defined(ENABLE_PACMAN) && defined(ENABLE_GALAGA) && defined(ENABLE_FROGGER) && defined(ENABLE_DIGDUG))  || \
-    (defined(ENABLE_PACMAN) && defined(ENABLE_DKONG) && defined(ENABLE_FROGGER) && defined(ENABLE_DIGDUG))  || \
-    (defined(ENABLE_GALAGA) && defined(ENABLE_DKONG) && defined(ENABLE_FROGGER) && defined(ENABLE_DIGDUG))
-#define MENU_SCROLL
+#ifdef ENABLE_1942
+  #ifdef SINGLE_MACHINE
+    #define MACHINE_IS_1942  1
+    #define _1942_BEGIN
+    #define _1942_END
+  #else
+    #define MACHINE_IS_1942  (machine == MCH_1942)
+    // digdug is never first and always last
+    #define _1942_BEGIN  else {
+    #define _1942_END    }
+  #endif
 #endif
 
 #if defined(__cplusplus)
@@ -212,10 +228,23 @@ extern const unsigned char digdug_rom_cpu1[];
 extern const unsigned char digdug_rom_cpu2[];
 extern const unsigned char digdug_rom_cpu3[];
 #endif
+#ifdef ENABLE_1942
+extern unsigned char _1942_bank;
+extern const unsigned char _1942_rom_cpu1[];
+extern const unsigned char _1942_rom_cpu2[];
+extern const unsigned char _1942_rom_cpu1_b0[];
+extern const unsigned char _1942_rom_cpu1_b1[];
+extern const unsigned char _1942_rom_cpu1_b2[];
+#endif
 
 #define NONE  ((const unsigned char *)0l)
 
 static inline byte OpZ80_INL(register word Addr) {
+#ifdef ENABLE_1942
+  static const unsigned char *_1942_bank_table[] = {
+    _1942_rom_cpu1_b0, _1942_rom_cpu1_b1, _1942_rom_cpu1_b2 }; 
+#endif
+
 #ifndef SINGLE_MACHINE
   static const unsigned char *rom_table[][3] = {
     { NONE, NONE, NONE },
@@ -239,8 +268,16 @@ static inline byte OpZ80_INL(register word Addr) {
 #ifdef ENABLE_DIGDUG
     { digdug_rom_cpu1, digdug_rom_cpu2, digdug_rom_cpu3 } ROM_ENDL
 #endif  
+#ifdef ENABLE_1942
+    { _1942_rom_cpu1, _1942_rom_cpu2, NONE } ROM_ENDL
+#endif  
 #ifndef SINGLE_MACHINE
-  };
+  }; 
+#ifdef ENABLE_1942
+  if(machine == MCH_1942 && (Addr & 0x8000))
+    return _1942_bank_table[_1942_bank][Addr-0x8000];
+#endif
+  
   return rom_table[machine][current_cpu][Addr];
 #else 
   return rom_table[current_cpu][Addr];

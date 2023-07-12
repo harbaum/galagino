@@ -77,6 +77,9 @@ void leds_update(void) {
 #ifdef ENABLE_DIGDUG
       { LED_WHITE, LED_BLUE, LED_RED, LED_RED, LED_RED, LED_BLUE, LED_WHITE },
 #endif
+#ifdef ENABLE_1942
+      { LED_WHITE, LED_BLACK, LED_GREEN, LED_GREEN, LED_GREEN, LED_BLACK, LED_WHITE },
+#endif
     };
     memcpy(leds, menu_leds+menu_sel-1, NUM_LEDS*sizeof(CRGB));
   } else
@@ -189,6 +192,31 @@ DIGDUG_BEGIN
       leds[c] = dd_bg_leds[c];
   }
 DIGDUG_END
+#endif
+
+#ifdef ENABLE_1942
+_1942_BEGIN
+  {
+    static const CRGB _1942_bg_leds[] =
+      {
+       CRGB(0x001000), CRGB(0x00FF00), CRGB(0x00FF20), CRGB(0x00FFFF), 
+       CRGB(0x0040FF), CRGB(0x0000FF), CRGB(0x000020), CRGB(0x000000)
+      };
+
+    static char sub_cnt = 0;
+    if(sub_cnt++ == 4) {
+      sub_cnt = 0;
+      
+      static char led = 0;
+      
+      char il = (led<NUM_LEDS)?led:((2*NUM_LEDS-2)-led);
+      for(char c=0;c<(NUM_LEDS+1)/2;c++)
+        leds[NUM_LEDS-1-c] = leds[c] = _1942_bg_leds[(c+led)%(sizeof(_1942_bg_leds)/sizeof(CRGB))];
+        
+      led = (led + 1) % (sizeof(_1942_bg_leds)/sizeof(CRGB));
+    }    
+  }
+_1942_END
 #endif
 
   FastLED.show();

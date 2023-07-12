@@ -1,6 +1,6 @@
 # Galagino - ESP32 Arcade Emulator
 
-Play Galaga, Pac-Man, Donkey Kong, Frogger and Digdug on the ESP32
+Play Galaga, Pac-Man, Donkey Kong, Frogger, Digdug and 1942 on the ESP32
 
 ![Cabinet](images/galagino_cabinet.jpg)
 
@@ -77,7 +77,7 @@ aren't only electrically compatible but also mechanically.
 * one push button and a five way joystick breakout (for Pac-Man and Donkey Kong)
 * breadboard and wires
 
-The entire setup should be connected as depiced below. The Devkit is
+The entire setup should be connected as depicted below. The Devkit is
 too wide for the breadboard leaving no space above it to connect
 wires. Thus the wires going to the top pin row of the Devkit are
 placed underneath the DevKit with the connections done as shown in the
@@ -124,6 +124,7 @@ The software consists of three parts:
     * [Donkey Kong (US set 1)](https://www.bing.com/search?q=donkey+kong+arcade+rom)
     * [Frogger](https://www.bing.com/search?q=frogger+arcade+rom)
     * [Digdug](https://www.bing.com/search?q=digdug+arcade+rom)
+    * [1942](https://www.bing.com/search?q=1942+arcade+rom)	
 * A [Z80 software emulation](https://fms.komkon.org/EMUL8/Z80-081707.zip) by [Marat Fayzullin](https://fms.komkon.org/)
 
 Galagino uses code that is not freely available and thus not included in this
