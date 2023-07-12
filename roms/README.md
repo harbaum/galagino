@@ -80,7 +80,7 @@ Files needed from the [Digdug Namco](https://www.bing.com/search?q=digdug+namco+
 
 Files needed from the [1942 (Capcom 1984)](https://www.bing.com/search?q=1942+arcade+rom) romset:
 
-* ```srb-03.m3```, ```srb-04.m4````- CPU1 rom
+* ```srb-03.m3```, ```srb-04.m4``` - CPU1 rom
 * ```srb-05.m5``` - CPU1 banked rom 0
 * ```srb-06.m6``` - CPU1 banked rom 1
 * ```srb-07.m7``` - CPU1 banked rom 2
