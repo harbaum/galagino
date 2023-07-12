@@ -4,8 +4,8 @@ This directory contains ROM files and other data required to build
 galagino. The *Galaga Namco Rev. B* romset contains the orignal rom
 files from the galaga arcade. These files are also needed for
 emulators like MAME and can easily be found online. If Pac-Man and/or
-Donkey Kong and Frogger are to be included as well, then their ROM
-files are also needed.
+Donkey Kong, Frogger, Digdug an 1942 are to be included as well, then
+their ROM files are also needed.
 
 Once all files have been placed here, the conversion scripts
 in the [romconv directory](../romconv) can be used to convert
@@ -75,3 +75,20 @@ Files needed from the [Digdug Namco](https://www.bing.com/search?q=digdug+namco+
 * ```136007.112``` - playfield tile colormap
 * ```136007.111``` - sprite colormap
 * ```136007.113``` - color palette
+
+## 1942
+
+Files needed from the [1942 (Capcom 1984)](https://www.bing.com/search?q=1942+arcade+rom) romset:
+
+* ```srb-03.m3```, ```srb-04.m4````- CPU1 rom
+* ```srb-05.m5``` - CPU1 banked rom 0
+* ```srb-06.m6``` - CPU1 banked rom 1
+* ```srb-07.m7``` - CPU1 banked rom 2
+* ```sr-01.c11``` - CPU2 rom
+* ```sr-14.l1```, ```sr-15.l2```, ```sr-16.n1```, ```sr-17.n2``` - sprite graphics
+* ```sr-02.f2``` - character graphics
+* ```sr-08.a1```, ```sr-09.a2```, ```sr-10.a3```, ```sr-11.a4```, ```sr-12.a5```, ```sr-13.a6``` - tile graphics
+* ```sb-5.e8```, ```sb-6.e9```, ```sb-7.e10``` - color palette
+* ```sb-0.f1``` - character colormap
+* ```sb-4.d6```, ```sb-3.d2```, ```sb-2.d1``` - tile colormap
+* ```sb-8.k3``` - sprite colormap
