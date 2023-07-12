@@ -32,6 +32,40 @@ void StepZ80(Z80 *R)
   if(R->IFF&IFF_EI)
     R->IFF=(R->IFF&~IFF_EI)|IFF_1; /* Done with AfterEI state */
 }
+
+#ifdef ENABLE_DIGDUG
+// digdug is very close to the performance limit. Implementing 
+// it's own main instruction with direct rom access helps keeping
+// the performance up
+extern char current_cpu;
+extern const unsigned char digdug_rom_cpu1[];
+extern const unsigned char digdug_rom_cpu2[];
+extern const unsigned char digdug_rom_cpu3[];
+
+void digdug_StepZ80(Z80 *R)
+{
+  static const unsigned char *rom_table[3] =
+    { digdug_rom_cpu1, digdug_rom_cpu2, digdug_rom_cpu3 };
+
+  register byte I;
+  register pair J;
+
+  // I=OpZ80_INL(R->PC.W++);
+  I=rom_table[current_cpu][R->PC.W++];
+
+  switch(I)
+  {
+#include "Codes.h"
+    case PFX_CB: CodesCB(R);break;
+    case PFX_ED: CodesED(R);break;
+    case PFX_FD: CodesFD(R);break;
+    case PFX_DD: CodesDD(R);break;
+  }
+
+  if(R->IFF&IFF_EI)
+    R->IFF=(R->IFF&~IFF_EI)|IFF_1; /* Done with AfterEI state */
+}
+#endif
 """
 
 def unpack_z80(name):
