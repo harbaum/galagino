@@ -153,3 +153,22 @@ there are more video related ROMs to be converted.
 ./tileconv.py ../roms/dd1.9 ../galagino/digdug_tilemap.h
 ./tileconv.py ../roms/dd1.11 ../galagino/digdug_pftiles.h
 ```
+
+## 1942 ROM conversion
+
+1942 uses more and more colorful graphics than the other systems and thus uses more and bigger graphics ROMs. It#s also the only system on this list using banking techniques to increase the CPU code ROM sizes.
+
+```
+./cmapconv.py _1942_colormap_chars ../roms/sb-5.e8,../roms/sb-6.e9,../roms/sb-7.e10 128 ../roms/sb-0.f1 ../galagino/1942_character_cmap.h
+./cmapconv.py _1942_colormap_tiles ../roms/sb-5.e8,../roms/sb-6.e9,../roms/sb-7.e10 -1 ../roms/sb-4.d6,../roms/sb-3.d2,../roms/sb-2.d1 ../galagino/1942_tile_cmap.h
+./cmapconv.py _1942_colormap_sprites ../roms/sb-5.e8,../roms/sb-6.e9,../roms/sb-7.e10 64 ../roms/sb-8.k3 ../galagino/1942_sprite_cmap.h
+./logoconv.py ../logos/1942.png ../galagino/1942_logo.h
+./romconv.py _1942_rom_cpu1 ../roms/srb-03.m3 ../roms/srb-04.m4 ../galagino/1942_rom1.h
+./romconv.py _1942_rom_cpu1_b0 ../roms/srb-05.m5 ../galagino/1942_rom1_b0.h
+./romconv.py _1942_rom_cpu1_b1 ../roms/srb-06.m6 ../galagino/1942_rom1_b1.h
+./romconv.py _1942_rom_cpu1_b2 ../roms/srb-07.m7 ../galagino/1942_rom1_b2.h
+./romconv.py _1942_rom_cpu2 ../roms/sr-01.c11 ../galagino/1942_rom2.h
+./spriteconv.py _1942_sprites 1942 ../roms/sr-14.l1 ../roms/sr-15.l2 ../roms/sr-16.n1 ../roms/sr-17.n2 ../galagino/1942_spritemap.h
+./tileconv.py ../roms/sr-02.f2 ../galagino/1942_charmap.h
+./tileconv.py ../roms/sr-08.a1 ../roms/sr-09.a2 ../roms/sr-10.a3 ../roms/sr-11.a4 ../roms/sr-12.a5 ../roms/sr-13.a6 ../galagino/1942_tilemap.h
+```
