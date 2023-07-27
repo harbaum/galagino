@@ -118,6 +118,14 @@ To get the project working on the Cheap Yellow Display, just uncomment the `#def
 
 ## Software
 
+**Important notice 1:** You really need to use the Arduino IDE as it provides
+the optimization settings required for Galaga and Digdug by default. E.g.
+PlatformIO doesn't seem to enable enough optimization.
+
+**Important notice 2:** I2C/DAC support seems to be broken in the
+ESP32 board package version 2.0.10 and up. Please use ESP32
+board package 2.0.9 or older.
+
 The software consists of three parts:
 
 * The [Galagino specific code](galagino/) contained in this repository
