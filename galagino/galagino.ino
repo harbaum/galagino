@@ -603,17 +603,13 @@ void audio_init(void) {
   // 24 kHz @ 16 bit = 48000 bytes/sec = 800 bytes per 60hz game frame =
   // 1600 bytes per 30hz screen update = ~177 bytes every four tile rows
   static const i2s_config_t i2s_config = {
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#warning "Fix audio on ESP32 S3"    
-#else
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN),
-#endif
     .sample_rate = 24000,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
 #ifdef SND_DIFF
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
 #else
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,
 #endif
     .intr_alloc_flags = 0,
     .dma_buf_count = 4,
@@ -628,16 +624,10 @@ void audio_init(void) {
   audio_dkong_bitrate(true);
 #endif
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#warning "Fix audio on ESP32 S3"    
-#else
 #ifdef SND_DIFF
   i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
-#elif defined(SND_LEFT_CHANNEL)
-  i2s_set_dac_mode(I2S_DAC_CHANNEL_LEFT_EN);
 #else
   i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
-#endif
 #endif
 }
 
