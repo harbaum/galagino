@@ -17,6 +17,15 @@
 
 #include "tileaddr.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 5)
+// See https://github.com/espressif/arduino-esp32/issues/8467
+#define WORKAROUND_I2S_APLL_PROBLEM
+// as a workaround we run dkong audio also at 24khz (instead of 11765)
+// and fill the buffer at half the rate resulting in 12khz effective
+// sample rate
+unsigned char dkong_obuf_toggle = 0;
+#endif
+
 #define IO_EMULATION
 
 // the hardware supports 64 sprites
@@ -392,14 +401,25 @@ DKONG_BEGIN
       if(dkong_audio_rptr != dkong_audio_wptr)
         // copy data from dkong buffer into tx buffer
         // 8048 sounds gets 50% of the available volume range
+#ifdef WORKAROUND_I2S_APLL_PROBLEM
+        v = dkong_audio_transfer_buffer[dkong_audio_rptr][(dkong_obuf_toggle?32:0)+(i/2)];
+#else
         v = dkong_audio_transfer_buffer[dkong_audio_rptr][i];
-          
+#endif
       // include sample sounds
       // walk is 6.25% volume, jump is at 12.5% volume and, stomp is at 25%
-      for(char i=0;i<3;i++) {
-        if(dkong_sample_cnt[i]) {
-          v += *dkong_sample_ptr[i]++ >> (2-i); 
-          dkong_sample_cnt[i]--;
+      for(char j=0;j<3;j++) {
+        if(dkong_sample_cnt[j]) {
+#ifdef WORKAROUND_I2S_APLL_PROBLEM
+          v += *dkong_sample_ptr[j] >> (2-j); 
+          if(i & 1) { // advance read pointer every second sample
+            dkong_sample_ptr[j]++;
+            dkong_sample_cnt[j]--;
+          }
+#else
+          v += *dkong_sample_ptr[j]++ >> (2-j); 
+          dkong_sample_cnt[j]--;
+#endif
         }
       }
     }
@@ -477,8 +497,14 @@ DKONG_END
   if(machine == MCH_DKONG)
   #endif
   {
-    // advance write pointer. The buffer is a ring
-    dkong_audio_rptr = (dkong_audio_rptr+1)&DKONG_AUDIO_QUEUE_MASK;
+#ifdef WORKAROUND_I2S_APLL_PROBLEM
+    if(dkong_obuf_toggle)
+#endif
+      // advance write pointer. The buffer is a ring
+      dkong_audio_rptr = (dkong_audio_rptr+1)&DKONG_AUDIO_QUEUE_MASK;
+#ifdef WORKAROUND_I2S_APLL_PROBLEM
+    dkong_obuf_toggle = !dkong_obuf_toggle;
+#endif
   }
 #endif
 }
@@ -592,7 +618,9 @@ void audio_dkong_bitrate(char is_dkong) {
   // DAC connected to port 0.
   
   // The effective sample rate thus is 6M/15/34 = 11764.7 Hz
+#ifndef WORKAROUND_I2S_APLL_PROBLEM
   i2s_set_sample_rates(I2S_NUM_0, is_dkong?11765:24000);
+#endif
 }
 
 void audio_init(void) {  
@@ -616,7 +644,12 @@ void audio_init(void) {
     .intr_alloc_flags = 0,
     .dma_buf_count = 4,
     .dma_buf_len = 64,   // 64 samples
+#ifndef WORKAROUND_I2S_APLL_PROBLEM
     .use_apll = true
+#else
+    // APLL usage is broken in ESP-IDF 4.4.5
+    .use_apll = false
+#endif
   };
 
   i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
@@ -748,6 +781,13 @@ void emulation_task(void *p) {
 void setup() {
   Serial.begin(115200);
   Serial.println("Galagino"); 
+
+  Serial.print("ESP-IDF "); 
+  Serial.println(ESP_IDF_VERSION, HEX); 
+
+#ifdef WORKAROUND_I2S_APLL_PROBLEM
+  Serial.println("I2S APLL workaround active"); 
+#endif
 
   // this should not be needed as the CPU runs by default on 240Mht nowadays
   setCpuFrequencyMhz(240000000);
