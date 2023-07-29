@@ -460,7 +460,9 @@ DKONG_END
     snd_buffer[2*i]   = 0x8000 + v;    // positive signal on GPIO26
     snd_buffer[2*i+1] = 0x8000 - v;    // negatve signal on GPIO25 
 #else
-    snd_buffer[i]     = 0x8000 + v;
+    // work-around weird byte order bug, see 
+    // https://github.com/espressif/arduino-esp32/issues/8467#issuecomment-1656616015
+    snd_buffer[i^1]   = 0x8000 + v;
 #endif
       
 #if defined(ENABLE_PACMAN) || defined(ENABLE_GALAGA)
