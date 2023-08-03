@@ -41,6 +41,7 @@ python ./romconv.py digdug_rom_cpu1 ../roms/dd1a.1 ../roms/dd1a.2 ../roms/dd1a.3
 python ./romconv.py digdug_rom_cpu2 ../roms/dd1a.5 ../roms/dd1a.6 ../galagino/digdug_rom2.h
 python ./romconv.py digdug_rom_cpu3 ../roms/dd1.7 ../galagino/digdug_rom3.h
 python ./romconv.py digdug_playfield ../roms/dd1.10b ../galagino/digdug_playfield.h
+python ./romconv.py _1942_rom_cpu1 ../roms/srb-03.m3 ../roms/srb-04.m4 ../galagino/1942_rom1.h
 python ./romconv.py _1942_rom_cpu1_b0 ../roms/srb-05.m5 ../galagino/1942_rom1_b0.h
 python ./romconv.py _1942_rom_cpu1_b1 ../roms/srb-06.m6 ../galagino/1942_rom1_b1.h
 python ./romconv.py _1942_rom_cpu1_b2 ../roms/srb-07.m7 ../galagino/1942_rom1_b2.h
