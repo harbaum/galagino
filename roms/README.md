@@ -66,7 +66,7 @@ Files needed from the [Digdug (Namco)](https://www.bing.com/search?q=digdug+namc
 
 * ```dd1a.1```, ```dd1a.2```, ```dd1a.3```, ```dd1a.4``` - CPU1 rom
 * ```dd1a.5```, ```dd1a.6``` - CPU2 rom
-* ```dd1a.7``` - CPU3 rom
+* ```dd1.7``` - CPU3 rom
 * ```dd1.10b``` - playfield tilemaps
 * ```136007.110```, ```136007.109 ``` - audio wavetables
 * ```dd1.9``` - foreground tiles
