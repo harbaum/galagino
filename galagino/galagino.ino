@@ -638,6 +638,8 @@ void audio_init(void) {
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
 #ifdef SND_DIFF
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+#elif defined(SND_LEFT_CHANNEL) // For devices using the left channel (e.g. CYD)
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
 #else
     .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,
 #endif
@@ -661,6 +663,8 @@ void audio_init(void) {
 
 #ifdef SND_DIFF
   i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
+#elif defined(SND_LEFT_CHANNEL) // For devices using the left channel (e.g. CYD)
+  i2s_set_dac_mode(I2S_DAC_CHANNEL_LEFT_EN); 
 #else
   i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN);
 #endif
