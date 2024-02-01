@@ -48,7 +48,8 @@ unsigned char getNunchuckInput() {
            ((joyX > 127 + NUNCHUCK_MOVE_THRESHOLD) ? BUTTON_RIGHT : 0) | //Move Right
            ((joyY > 127 + NUNCHUCK_MOVE_THRESHOLD) ? BUTTON_UP : 0) | //Move Up
            ((joyY < 127 - NUNCHUCK_MOVE_THRESHOLD) ? BUTTON_DOWN : 0) | //Move Down
-           (nchuk.buttonZ() ? BUTTON_FIRE : 0);
+           (nchuk.buttonZ() ? BUTTON_FIRE : 0) |
+           (nchuk.buttonC() ? BUTTON_EXTRA : 0) ;
   }
 }
 

@@ -848,12 +848,22 @@ unsigned char buttons_get(void) {
   // galagino can be compiled without coin button. This will then
   // be implemented by the start button. Whenever the start button 
   // is pressed, a virtual coin button will be sent first 
+  unsigned char input_states = 0;
+#ifdef NUNCHUCK_INPUT
+  input_states |= getNunchuckInput();
+#endif;
+
 #ifndef BTN_COIN_PIN
+#ifdef BTN_COIN_PIN
+  input_states |= (!digitalRead(BTN_COIN_PIN)) ? BUTTON_EXTRA : 0;
+#else
+  input_states |= (!digitalRead(BTN_START_PIN)) ? BUTTON_EXTRA : 0;
+#endif
   static unsigned long virtual_coin_timer = 0;
   static int virtual_coin_state = 0;
   switch(virtual_coin_state)  {
     case 0:  // idle state
-      if(!digitalRead(BTN_START_PIN)) {
+      if(input_states & BUTTON_EXTRA) {
         virtual_coin_state = 1;   // virtual coin pressed
         virtual_coin_timer = millis();
       }
@@ -881,7 +891,7 @@ unsigned char buttons_get(void) {
       break;
     case 4:  // virtual start has ended
       // check if start button is actually still pressed
-      if(digitalRead(BTN_START_PIN))
+      if(! (input_states & BUTTON_EXTRA))
         virtual_coin_state = 0;   // button has been released, return to idle
       break;
   }
@@ -892,13 +902,7 @@ unsigned char buttons_get(void) {
   
   // reset if coin (or start if no coin is configured) is held for
   // more than 1 second
-  if(!digitalRead(
-#ifdef BTN_COIN_PIN
-    BTN_COIN_PIN
-#else
-    BTN_START_PIN
-#endif
-  )) {
+  if(input_states & BUTTON_EXTRA) {
     if(machine != MCH_MENU) {
 
 #ifdef MASTER_ATTRACT_GAME_TIMEOUT
@@ -936,7 +940,7 @@ unsigned char buttons_get(void) {
 
 #ifdef NUNCHUCK_INPUT
       return startAndCoinState |
-      getNunchuckInput();
+      input_states;
 #else
       return startAndCoinState |
       (digitalRead(BTN_LEFT_PIN) ? 0 : BUTTON_LEFT) |
