@@ -29,7 +29,7 @@
 
 #include "dip_switches.h"
 
-// #define CHEAP_YELLOW_DISPLAY_CONF
+#define CHEAP_YELLOW_DISPLAY_CONF
 
 #ifndef CHEAP_YELLOW_DISPLAY_CONF // Config as it was before
 
@@ -90,13 +90,14 @@
 // audio config (leave both commented out for GPIO 25 for Audio)
 // #define SND_DIFF   // set to output differential audio on GPIO25 _and_ inverted on GPIO26
 #define SND_LEFT_CHANNEL // Use GPIO 26 for audio
+#define NINTENDO_INPUT
+#define NUNCHUK
+//#define CLASSIC_CTRL
 
-#define NUNCHUCK_INPUT
+#define NINTENDO_SDA 22
+#define NINTENDO_SCL 27
 
-#define NUNCHUCK_SDA 22
-#define NUNCHUCK_SCL 27
-
-#define NUNCHUCK_MOVE_THRESHOLD 30 // This is the dead-zone for where minor movements on the stick will not be considered valid movements
+#define JOYSTICK_MOVE_THRESHOLD 30 // This is the dead-zone for where minor movements on the stick will not be considered valid movements
 
 // Pins used for buttons
 #define BTN_START_PIN 0 //This is the "boot" button
