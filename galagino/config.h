@@ -90,9 +90,10 @@
 // audio config (leave both commented out for GPIO 25 for Audio)
 // #define SND_DIFF   // set to output differential audio on GPIO25 _and_ inverted on GPIO26
 #define SND_LEFT_CHANNEL // Use GPIO 26 for audio
-#define NINTENDO_INPUT
-#define NUNCHUK
-//#define CLASSIC_CTRL
+#define NINTENDO_INPUT // currently supported: Nunchuk and Classic Controller
+#define CLASSIC_DPAD // Use DPAD or use left Joystick or both, if so desired
+#define CLASSIC_LJOY // Use left joystick 
+
 
 #define NINTENDO_SDA 22
 #define NINTENDO_SCL 27
