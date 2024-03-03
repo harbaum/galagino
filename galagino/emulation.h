@@ -18,6 +18,7 @@ extern unsigned char dkong_audio_rptr, dkong_audio_wptr;
 #define BUTTON_FIRE  0x10
 #define BUTTON_START 0x20
 #define BUTTON_COIN  0x40
+#define BUTTON_EXTRA 0x80
 
 #ifndef SINGLE_MACHINE
 enum {
