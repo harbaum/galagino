@@ -9,7 +9,7 @@ extern unsigned char dkong_audio_transfer_buffer[DKONG_AUDIO_QUEUE_LEN][64];
 extern unsigned char dkong_audio_rptr, dkong_audio_wptr;
 #endif
 
-// a total of 7 button is needed for
+// a total of 8 button is needed for
 // most games
 #define BUTTON_LEFT  0x01
 #define BUTTON_RIGHT 0x02
@@ -18,7 +18,8 @@ extern unsigned char dkong_audio_rptr, dkong_audio_wptr;
 #define BUTTON_FIRE  0x10
 #define BUTTON_START 0x20
 #define BUTTON_COIN  0x40
-#define BUTTON_EXTRA 0x80
+#define BUTTON_HOME  0x80
+
 
 #ifndef SINGLE_MACHINE
 enum {
