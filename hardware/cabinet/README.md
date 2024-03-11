@@ -14,7 +14,7 @@ There are currently two versions of the case.
 - [lasercut_parts_with_battery.svg](lasercut_parts_with_battery.svg) is
   a slightly modified version with the following changes:
 
-    - Cutouts in part 8 to allow to mount a small battery using zip ties
+    - Cutouts in part 8 to allow to mount a [small battery](../battery) using zip ties
     - Cutouts in part 12 for a power switch and the USB connector of a charging board mounted in part 8
     - Cutout in part 1 to give some room to the joystick connector of the [PCB set](../pcbs).
     - Shortended the "arm" of part 10 a little bit to make room for the cable connecting the LED stripe 
@@ -31,7 +31,7 @@ the ESP32 between parts 11 and 13) or screwed to a wooden part (the
 speaker to part 12 and the coin button to part 6). The LED stripe
 comes with adhesive tape and sticks to its wooden part 9.
 
-The [transparent plasic part for the marquee](../marquee) as well as
+The [transparent plastic part for the marquee](../marquee) as well as
 the [control board](../controlboard) and the [coin
 button](../coinbutton) are 3d printed and are either screwed to the
 plywood parts 6 and 12 or use the same 3mm flanges and are inserted
