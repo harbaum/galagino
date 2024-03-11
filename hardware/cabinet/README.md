@@ -3,7 +3,24 @@
 The cabinet is built from 15 lasercut 3mm plywood parts and is designed to
 house [common off-the-shelf electronic components](../).
 
-The cabinet may have to be modified If different parts are being used.
+## Versions
+
+There are currently two versions of the case. 
+
+- [lasercut_parts.svg](lasercut_parts.svg) is the original version to be
+  used with a USB power supply (no battery) and with a wiring directly
+  done to the board (no additional PCBs)
+  
+- [lasercut_parts_with_battery.svg](lasercut_parts_with_battery.svg) is
+  a slightly modified version with the following changes:
+
+    - Cutouts in part 8 to allow to mount a small battery using zip ties
+    - Cutouts in part 12 for a power switch and the USB connector of a charging board mounted in part 8
+    - Cutout in part 1 to give some room to the joystick connector of the [PCB set](../pcbs).
+    - Shortended the "arm" of part 10 a little bit to make room for the cable connecting the LED stripe 
+    - Cutouts in parts 11 and 13 to allow a power cable to be routed from the battery to the ESP32
+
+The cabinet may have to be modified further if different parts are being used.
 
 ![The assembled cabinet](assembled.jpg)
 
