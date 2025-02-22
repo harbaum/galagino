@@ -43,6 +43,10 @@
 #define TFT_ILI9341   // define for ili9341, otherwise st7789
 #define TFT_VFLIP     // define for upside down
 
+#ifndef TFT_ILI9341
+// #define TFT_INV_OFF // some ST7789 requires inversion off
+#endif
+
 // x and y offset of 224x288 pixels inside the 240x320 screen
 #define TFT_X_OFFSET  8
 #define TFT_Y_OFFSET 16
@@ -79,6 +83,10 @@
 // #define TFT_VFLIP   // define for upside down
 
 // #define TFT_MAC  0x20  // some CYD need this to rotate properly and have correct colors
+
+#ifndef TFT_ILI9341
+// #define TFT_INV_OFF // some ST7789 requires inversion off
+#endif
 
 // x and y offset of 224x288 pixels inside the 240x320 screen
 #define TFT_X_OFFSET 8
