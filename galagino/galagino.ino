@@ -321,15 +321,15 @@ void snd_render_buffer(void) {
     #define AY_INC    9      // and it runs at 1.78 MHz -> 223718/24000 = 9,32
     #define AY_VOL   11      // min/max = -/+ 3*15*11 = -/+ 495
   #else
-    #ifndef ENABLE_FROGGER   // only 1942  
+    #ifndef ENABLE_FROGGER   // only 1942
       #define AY      2      // 1942 has two AYs
       #define AY_INC  8      // and they runs at 1.5 MHz -> 187500/24000 = 7,81
-      #define AY_VOL 10      // min/max = -/+ 6*15*11 = -/+ 990
+      #define AY_VOL  4      // min/max = -/+ 6*15*4 = -/+ 360 (must fit in short after *64)
     #else
       // both enabled
       #define AY ((machine == MCH_FROGGER)?1:2)
       #define AY_INC ((machine == MCH_FROGGER)?9:8)
-      #define AY_VOL ((machine == MCH_FROGGER)?11:10)
+      #define AY_VOL ((machine == MCH_FROGGER)?11:4)
     #endif
   #endif
   
@@ -473,7 +473,7 @@ DKONG_END
     }
 #endif
     // v is now in the range of +/- 512, so expand to +/- 15 bit
-    v = v*64;
+    v = v*MASTER_VOLUME;
 
 #ifdef SND_DIFF
     // generate differential output
