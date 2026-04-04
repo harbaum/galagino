@@ -51,6 +51,7 @@
 #define LED_BRIGHTNESS 50   // range 0..255
 
 // audio config
+#define MASTER_VOLUME  64   // master volume scaler, default 64 (max), range 1-64
 // #define SND_DIFF   // set to output differential audio on GPIO25 _and_ inverted on GPIO26
 
 // Pins used for buttons
