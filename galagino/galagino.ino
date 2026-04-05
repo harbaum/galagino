@@ -793,8 +793,8 @@ void setup() {
   Serial.println("I2S APLL workaround active"); 
 #endif
 
-  // this should not be needed as the CPU runs by default on 240Mht nowadays
-  setCpuFrequencyMhz(240000000);
+  // this should not be needed as the CPU runs by default on 240Mhz nowadays
+  setCpuFrequencyMhz(240);
 
   Serial.print("Free heap: "); Serial.println(ESP.getFreeHeap());
   Serial.print("Main core: "); Serial.println(xPortGetCoreID());

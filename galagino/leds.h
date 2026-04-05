@@ -24,7 +24,14 @@ extern void leds_update(void);
 extern void leds_check_galaga_sprite(struct sprite_S *spr);
 extern void leds_state_reset();
   
-#endif // LED_PIN 
+#else
+
+static inline void leds_init(void) {}
+static inline void leds_update(void) {}
+static inline void leds_check_galaga_sprite(struct sprite_S *spr) {}
+static inline void leds_state_reset(void) {}
+
+#endif // LED_PIN
 
 struct sprite_S {
   unsigned char code, color, flags;
