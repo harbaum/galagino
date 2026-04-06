@@ -40,41 +40,47 @@ static inline unsigned char galaga_RdZ80(unsigned short Addr) {
 	  retval = map71[namco_cnt];
 	} else {
 	  static unsigned char prev_mask = 0;
-	  static unsigned char fire_timer = 0;
-          
-	  // byte 0 is credit in BCD, byte 1 and 2: ...FLURD 
+	  static unsigned char cached_keymask = 0;
+	  static unsigned char fire_latched = 0;
+
+	  // The Namco 06xx protocol reads 3 bytes per polling cycle. Sample
+	  // buttons and perform edge detection once at the start of the
+	  // cycle, then reuse the cached state for all 3 bytes. Without this,
+	  // edges detected on the wrong byte (e.g. fire edge on byte 0, the
+	  // credit byte) are consumed before the byte that encodes them.
+	  if(namco_cnt == 0) {
+	    cached_keymask = buttons_get();
+
+	    // latch fire edge for the whole 3-byte cycle
+	    fire_latched = (cached_keymask & ~prev_mask & BUTTON_FIRE) ? 1 : 0;
+
+	    // 51xx leaves credit mode when user presses start? Nope ...
+	    if((cached_keymask & BUTTON_START) && !(prev_mask & BUTTON_START) && credit)
+	      credit -= 1;
+
+	    if((cached_keymask & BUTTON_COIN) && !(prev_mask & BUTTON_COIN) && (credit < 99))
+	      credit += 1;
+
+	    prev_mask = cached_keymask;
+	  }
+
+	  unsigned char keymask = cached_keymask;
+
+	  // byte 0 is credit in BCD, byte 1 and 2: ...FLURD
 	  unsigned char mapb1[] = { 16*(credit/10) + credit % 10, 0b11111111, 0b11111111 };
-	  
-	  // get a mask of currently pressed keys
-	  unsigned char keymask = buttons_get();
-	  
+
 	  // report directions directly
 	  if(keymask & BUTTON_LEFT)  mapb1[1] &= ~0x08;
 	  if(keymask & BUTTON_UP)    mapb1[1] &= ~0x04;
 	  if(keymask & BUTTON_RIGHT) mapb1[1] &= ~0x02;
 	  if(keymask & BUTTON_DOWN)  mapb1[1] &= ~0x01;
-	  
-	  // report fire only when it was pressed
-	  if((keymask & BUTTON_FIRE) && !(prev_mask & BUTTON_FIRE)) {
-	    mapb1[1] &= ~0x10;
-	    fire_timer = 1;         // 0 is too short for score enter, 5 is too long
-	    // should probably be done via a global counter
-	  } else if(fire_timer) {
-	    mapb1[1] &= ~0x10;
-	    fire_timer--;
-	  }
-	  
-	  // 51xx leaves credit mode when user presses start? Nope ...
-	  if((keymask & BUTTON_START) && !(prev_mask & BUTTON_START) && credit)
-	    credit -= 1;
-	  
-	  if((keymask & BUTTON_COIN) && !(prev_mask & BUTTON_COIN) && (credit < 99))
-	    credit += 1;
-	  
+
+	  // report fire when its rising edge was latched this cycle
+	  if(fire_latched) mapb1[1] &= ~0x10;
+
 	  if(namco_cnt > 2) return 0xff;
-          
+
 	  retval = mapb1[namco_cnt];
-	  prev_mask = keymask;
 	}
 	namco_cnt++;
       }
