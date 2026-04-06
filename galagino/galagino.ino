@@ -35,8 +35,8 @@ struct sprite_S *sprite;
 // buffer space for one row of 28 characters
 unsigned short *frame_buffer;
 
-#ifdef NUNCHUCK_INPUT
-#include "Nunchuck.h"
+#ifdef NINTENDO_INPUT
+#include "Nintendo.h"
 #endif
 
 // include converted rom data
@@ -806,13 +806,15 @@ void setup() {
   Serial.print("Free heap: "); Serial.println(ESP.getFreeHeap());
 
   // make button pins inputs
+#ifdef BTN_START_PIN
   pinMode(BTN_START_PIN, INPUT_PULLUP);
+#endif
 #ifdef BTN_COIN_PIN
   pinMode(BTN_COIN_PIN, INPUT_PULLUP);
 #endif
 
-#ifdef NUNCHUCK_INPUT
-  nunchuckSetup();
+#ifdef NINTENDO_INPUT
+  inputSetup();
 #else
   pinMode(BTN_LEFT_PIN, INPUT_PULLUP);
   pinMode(BTN_RIGHT_PIN, INPUT_PULLUP);
@@ -848,22 +850,12 @@ unsigned char buttons_get(void) {
   // galagino can be compiled without coin button. This will then
   // be implemented by the start button. Whenever the start button 
   // is pressed, a virtual coin button will be sent first 
-  unsigned char input_states = 0;
-#ifdef NUNCHUCK_INPUT
-  input_states |= getNunchuckInput();
-#endif;
-
 #ifndef BTN_COIN_PIN
-#ifdef BTN_COIN_PIN
-  input_states |= (!digitalRead(BTN_COIN_PIN)) ? BUTTON_EXTRA : 0;
-#else
-  input_states |= (!digitalRead(BTN_START_PIN)) ? BUTTON_EXTRA : 0;
-#endif
   static unsigned long virtual_coin_timer = 0;
   static int virtual_coin_state = 0;
   switch(virtual_coin_state)  {
     case 0:  // idle state
-      if(input_states & BUTTON_EXTRA) {
+      if(!digitalRead(BTN_START_PIN)) {
         virtual_coin_state = 1;   // virtual coin pressed
         virtual_coin_timer = millis();
       }
@@ -891,7 +883,7 @@ unsigned char buttons_get(void) {
       break;
     case 4:  // virtual start has ended
       // check if start button is actually still pressed
-      if(! (input_states & BUTTON_EXTRA))
+      if(digitalRead(BTN_START_PIN))
         virtual_coin_state = 0;   // button has been released, return to idle
       break;
   }
@@ -902,7 +894,13 @@ unsigned char buttons_get(void) {
   
   // reset if coin (or start if no coin is configured) is held for
   // more than 1 second
-  if(input_states & BUTTON_EXTRA) {
+  if(!digitalRead(
+#ifdef BTN_COIN_PIN
+    BTN_COIN_PIN
+#else
+    BTN_START_PIN
+#endif
+  )) {
     if(machine != MCH_MENU) {
 
 #ifdef MASTER_ATTRACT_GAME_TIMEOUT
@@ -938,9 +936,12 @@ unsigned char buttons_get(void) {
       (((virtual_coin_state != 3) && (virtual_coin_state != 4)) ? 0 : BUTTON_START); 
 #endif
 
-#ifdef NUNCHUCK_INPUT
-      return startAndCoinState |
-      input_states;
+#ifdef NINTENDO_INPUT
+    unsigned char inp = getNintendoInput();
+      if (inp & BUTTON_HOME) emulation_reset();
+      if ((inp & BUTTON_FIRE) && (inp & BUTTON_DOWN) && (inp &BUTTON_COIN)) emulation_reset();
+      if ((inp & BUTTON_FIRE) && (inp & BUTTON_COIN))   return BUTTON_START;
+      else return inp;
 #else
       return startAndCoinState |
       (digitalRead(BTN_LEFT_PIN) ? 0 : BUTTON_LEFT) |
