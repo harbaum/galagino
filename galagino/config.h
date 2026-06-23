@@ -67,6 +67,7 @@
 
 // video config
 #define TFT_SPICLK 40000000 // 40 Mhz. Some displays cope with 80 Mhz
+// #define SPI_CLOCK 40000000
 
 #define TFT_MISO 12
 #define TFT_MOSI 13
@@ -93,6 +94,8 @@
 #define SND_LEFT_CHANNEL // Use GPIO 26 for audio
 
 #define NUNCHUCK_INPUT
+
+#define BLUE32_CONTROLLER_INPUT
 
 #define NUNCHUCK_SDA 22
 #define NUNCHUCK_SCL 27

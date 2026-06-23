@@ -110,6 +110,7 @@ The ESP32-2432S028R A.K.A. the [Cheap Yellow Display](https://github.com/witness
 Hardware Needed:
 - Cheap Yellow Display
 - [A Nintendo Wii nunchuck and adaptor](hardware/NUNCHUCK.MD) - This can be connected to the JST connector labled "CN1" with the cable included with the display
+- (or) a [Nintento Switch Pro Controller](hardware/BLUEPAD32.MD) or [similar](https://github.com/ricardoquesada/bluepad32)
 - A speaker - This can be attached to the display with a 1.25mm JST connector to the connector labled "SPEAK" (or soldered)
 
 Note: The `Start` button is connected to the "boot" button on the board.
