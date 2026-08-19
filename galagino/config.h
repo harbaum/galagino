@@ -29,7 +29,7 @@
 
 #include "dip_switches.h"
 
-// #define CHEAP_YELLOW_DISPLAY_CONF
+#define CHEAP_YELLOW_DISPLAY_CONF
 
 #ifndef CHEAP_YELLOW_DISPLAY_CONF // Config as it was before
 
@@ -67,6 +67,9 @@
 
 // video config
 #define TFT_SPICLK 40000000 // 40 Mhz. Some displays cope with 80 Mhz
+// #define SPI_CLOCK 40000000
+
+#define MASTER_VOLUME  64   // master volume scaler, default 64 (max), range 1-64
 
 #define TFT_MISO 12
 #define TFT_MOSI 13
@@ -79,7 +82,7 @@
 #define TFT_ILI9341 // define for ili9341, otherwise st7789
 // #define TFT_VFLIP   // define for upside down
 
-// #define TFT_MAC  0x20  // some CYD need this to rotate properly and have correct colors
+#define TFT_MAC  0x20  // some CYD need this to rotate properly and have correct colors
 
 // x and y offset of 224x288 pixels inside the 240x320 screen
 #define TFT_X_OFFSET 8
@@ -92,7 +95,9 @@
 // #define SND_DIFF   // set to output differential audio on GPIO25 _and_ inverted on GPIO26
 #define SND_LEFT_CHANNEL // Use GPIO 26 for audio
 
-#define NUNCHUCK_INPUT
+// #define NUNCHUCK_INPUT
+
+#define BLUE32_CONTROLLER_INPUT // Use instead of Nunchuck input, requires a Bluepad32 controller board
 
 #define NUNCHUCK_SDA 22
 #define NUNCHUCK_SCL 27
@@ -104,5 +109,9 @@
 // #define BTN_COIN_PIN 21 // if this is not defined, then start will act as coin & start
 
 #endif // #ifndef CHEAP_YELLOW_DISPLAY_CONF
+
+#if defined(BLUE32_CONTROLLER_INPUT) && defined(NUNCHUCK_INPUT)
+#error "Configuration Error: BLUE32_CONTROLLER_INPUT and NUNCHUCK_INPUT should not be enabled at the same time"
+#endif
 
 #endif // _CONFIG_H_

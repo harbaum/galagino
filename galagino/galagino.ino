@@ -103,6 +103,35 @@ void hw_reset(void) {
   ESP.restart();
 }
 
+#ifdef BLUE32_CONTROLLER_INPUT
+
+#include <Bluepad32.h>
+
+ControllerPtr myControllers[BP32_MAX_GAMEPADS];
+
+// Callback: Triggered when the Switch Pro Controller pairs
+void onConnectedController(ControllerPtr ctl) {
+    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+        if (myControllers[i] == nullptr) {
+            myControllers[i] = ctl;
+            Serial.printf("Controller connected: %s\n", ctl->getModelName().c_str());
+            break;
+        }
+    }
+}
+
+// Callback: Triggered when the controller disconnects
+void onDisconnectedController(ControllerPtr ctl) {
+    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+        if (myControllers[i] == ctl) {
+            myControllers[i] = nullptr;
+            Serial.println("Controller disconnected");
+            break;
+        }
+    }
+}
+#endif
+
 #ifndef SINGLE_MACHINE
 // convert rgb565 big endian color to greyscale
 unsigned short greyscale(unsigned short in) {
@@ -778,12 +807,24 @@ _1942_END
 void emulation_task(void *p) {
   prepare_emulation();
 
-  while(1)
+  while(1) {
     emulate_frame();
+#ifdef BLUE32_CONTROLLER_INPUT
+    // Yield 1 tick to the Watchdog and Bluetooth tasks
+    vTaskDelay(pdMS_TO_TICKS(1));
+#endif
+  }
 }
 
 void setup() {
   Serial.begin(115200);
+
+#ifdef BLUE32_CONTROLLER_INPUT
+  // --- Add Bluepad32 Setup ---
+  BP32.setup(&onConnectedController, &onDisconnectedController);
+  // BP32.forgetBluetoothKeys(); // Optional: Forces pairing mode on boot if needed
+#endif
+
   Serial.println("Galagino"); 
 
   Serial.print("ESP-IDF "); 
@@ -811,14 +852,16 @@ void setup() {
   pinMode(BTN_COIN_PIN, INPUT_PULLUP);
 #endif
 
-#ifdef NUNCHUCK_INPUT
+#ifndef NUNCHUCK_INPUT
+#ifdef BTN_LEFT_PIN
+    pinMode(BTN_LEFT_PIN, INPUT_PULLUP);
+    pinMode(BTN_RIGHT_PIN, INPUT_PULLUP);
+    pinMode(BTN_DOWN_PIN, INPUT_PULLUP);
+    pinMode(BTN_UP_PIN, INPUT_PULLUP);
+    pinMode(BTN_FIRE_PIN, INPUT_PULLUP);
+#endif
+#elif !defined(BLUE32_CONTROLLER_INPUT)
   nunchuckSetup();
-#else
-  pinMode(BTN_LEFT_PIN, INPUT_PULLUP);
-  pinMode(BTN_RIGHT_PIN, INPUT_PULLUP);
-  pinMode(BTN_DOWN_PIN, INPUT_PULLUP);
-  pinMode(BTN_UP_PIN, INPUT_PULLUP);
-  pinMode(BTN_FIRE_PIN, INPUT_PULLUP);
 #endif
 
   // initialize audio to default bitrate (24khz unless dkong is
@@ -844,21 +887,18 @@ void setup() {
   tft.begin();
 }
 
+#ifndef BLUE32_CONTROLLER_INPUT
 unsigned char buttons_get(void) {
   // galagino can be compiled without coin button. This will then
-  // be implemented by the start button. Whenever the start button 
-  // is pressed, a virtual coin button will be sent first 
+  // be implemented by the start button. Whenever the start button
+  // is pressed, a virtual coin button will be sent first
   unsigned char input_states = 0;
 #ifdef NUNCHUCK_INPUT
   input_states |= getNunchuckInput();
 #endif;
 
 #ifndef BTN_COIN_PIN
-#ifdef BTN_COIN_PIN
-  input_states |= (!digitalRead(BTN_COIN_PIN)) ? BUTTON_EXTRA : 0;
-#else
   input_states |= (!digitalRead(BTN_START_PIN)) ? BUTTON_EXTRA : 0;
-#endif
   static unsigned long virtual_coin_timer = 0;
   static int virtual_coin_state = 0;
   switch(virtual_coin_state)  {
@@ -923,11 +963,11 @@ unsigned char buttons_get(void) {
 
         emulation_reset();
       }
-    }    
+    }
   } else
     reset_timer = 0;
 #endif
-  
+
   unsigned char startAndCoinState =
 #ifdef BTN_COIN_PIN
       // there is a coin pin -> coin and start work normal
@@ -950,10 +990,109 @@ unsigned char buttons_get(void) {
       (digitalRead(BTN_FIRE_PIN) ? 0 : BUTTON_FIRE);
 #endif
 }
+#else // #ifdef BLUE32_CONTROLLER_INPUT
+unsigned char buttons_get(void) {
+  unsigned char mask = 0;
+  bool bt_start = false;
+  bool bt_coin = false;
+
+  // --- 1. Read Bluetooth Controlller (Bluepad32) ---
+  if (myControllers[0] != nullptr && myControllers[0]->isConnected()) {
+    ControllerPtr ctl = myControllers[0];
+
+    // D-Pad y Analógico combinados
+    if ((ctl->dpad() & DPAD_UP)    || ctl->axisY() <= -250) mask |= BUTTON_UP;
+    if ((ctl->dpad() & DPAD_DOWN)  || ctl->axisY() >= 250)  mask |= BUTTON_DOWN;
+    if ((ctl->dpad() & DPAD_LEFT)  || ctl->axisX() <= -250) mask |= BUTTON_LEFT;
+    if ((ctl->dpad() & DPAD_RIGHT) || ctl->axisX() >= 250)  mask |= BUTTON_RIGHT;
+
+    // Botones de Acción
+    if (ctl->a() || ctl->b() || ctl->x() || ctl->y()) mask |= BUTTON_FIRE;
+
+    // Botones de Sistema
+    if (ctl->miscButtons() & 0x02) bt_start = true;
+    if (ctl->miscButtons() & 0x01) bt_coin = true;
+  }
+
+  // --- 2. Read Physical Buttons (GPIO) on the same mask ---
+#ifdef BTN_UP_PIN
+  if(!digitalRead(BTN_UP_PIN)) mask |= BUTTON_UP;
+#endif
+#ifdef BTN_DOWN_PIN
+  if(!digitalRead(BTN_DOWN_PIN)) mask |= BUTTON_DOWN;
+#endif
+#ifdef BTN_LEFT_PIN
+  if(!digitalRead(BTN_LEFT_PIN)) mask |= BUTTON_LEFT;
+#endif
+#ifdef BTN_RIGHT_PIN
+  if(!digitalRead(BTN_RIGHT_PIN)) mask |= BUTTON_RIGHT;
+#endif
+#ifdef BTN_FIRE_PIN
+  if(!digitalRead(BTN_FIRE_PIN)) mask |= BUTTON_FIRE;
+#endif
+
+  // --- 3. System Logic (Virtual Coin and Reset) ---
+  bool extra_pressed = false;
+
+#ifndef BTN_COIN_PIN
+  // If there is no physical coin button, the Start button acts as "Extra" for the reset timer
+  extra_pressed = (!digitalRead(BTN_START_PIN) || bt_start || bt_coin);
+
+  static unsigned long virtual_coin_timer = 0;
+  static int virtual_coin_state = 0;
+  switch(virtual_coin_state) {
+    case 0: if(extra_pressed) { virtual_coin_state = 1; virtual_coin_timer = millis(); } break;
+    case 1: if(millis() - virtual_coin_timer > 100) { virtual_coin_state = 2; virtual_coin_timer = millis(); } break;
+    case 2: if(millis() - virtual_coin_timer > 500) { virtual_coin_state = 3; virtual_coin_timer = millis(); } break;
+    case 3: if(millis() - virtual_coin_timer > 100) { virtual_coin_state = 4; virtual_coin_timer = millis(); } break;
+    case 4: if(!extra_pressed) virtual_coin_state = 0; break;
+  }
+#else
+  // If there IS a physical coin button, that acts as "Extra" for the reset timer
+  extra_pressed = (!digitalRead(BTN_COIN_PIN) || bt_coin);
+#endif
+
+#ifndef SINGLE_MACHINE
+  // Reset to main menu if coin (or start if no coin is configured) is held for more than 1 second
+  static unsigned long reset_timer = 0;
+  if(extra_pressed) {
+    if(machine != MCH_MENU) {
+#ifdef MASTER_ATTRACT_GAME_TIMEOUT
+      master_attract_timeout = 0;
+#endif
+      if(!reset_timer) reset_timer = millis();
+      if(millis() - reset_timer > 1000) {
+#ifdef TFT_BL
+        digitalWrite(TFT_BL, LOW);
+#endif
+        emulation_reset();
+      }
+    }
+  } else {
+    reset_timer = 0;
+  }
+#endif
+  // --- 4. Assemble Start and Coin in the final mask ---
+#ifdef BTN_COIN_PIN
+  if (!digitalRead(BTN_START_PIN) || bt_start) mask |= BUTTON_START;
+  if (!digitalRead(BTN_COIN_PIN) || bt_coin)   mask |= BUTTON_COIN;
+#else
+  if (virtual_coin_state == 1) mask |= BUTTON_COIN;
+  if (virtual_coin_state == 3 || virtual_coin_state == 4) mask |= BUTTON_START;
+#endif
+
+  return mask;
+}
+#endif
+
 
 void loop(void) {
+#ifdef BLUE32_CONTROLLER_INPUT
+  // Process incoming Bluetooth events
+    BP32.update();
+#endif
   // run video in main task. This will send signals
-  // to the emulation task in the background to 
+  // to the emulation task in the background to
   // synchronize video
   update_screen(); 
 
