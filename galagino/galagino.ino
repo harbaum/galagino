@@ -853,12 +853,12 @@ unsigned char buttons_get(void) {
   input_states |= getNunchuckInput();
 #endif;
 
-#ifndef BTN_COIN_PIN
 #ifdef BTN_COIN_PIN
+  // coin button present: long-press coin to return to menu
   input_states |= (!digitalRead(BTN_COIN_PIN)) ? BUTTON_EXTRA : 0;
 #else
+  // no coin button: start button doubles as coin, long-press to return to menu
   input_states |= (!digitalRead(BTN_START_PIN)) ? BUTTON_EXTRA : 0;
-#endif
   static unsigned long virtual_coin_timer = 0;
   static int virtual_coin_state = 0;
   switch(virtual_coin_state)  {
@@ -901,7 +901,7 @@ unsigned char buttons_get(void) {
   static unsigned long reset_timer = 0;
   
   // reset if coin (or start if no coin is configured) is held for
-  // more than 1 second
+  // more than 3 seconds
   if(input_states & BUTTON_EXTRA) {
     if(machine != MCH_MENU) {
 
@@ -915,7 +915,7 @@ unsigned char buttons_get(void) {
       if(!reset_timer)
         reset_timer = millis();
 
-      if(millis() - reset_timer > 1000) {
+      if(millis() - reset_timer > 3000) {
         // disable backlight if pin is specified
 #ifdef TFT_BL
         digitalWrite(TFT_BL, LOW);
